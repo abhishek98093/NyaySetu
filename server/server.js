@@ -3,7 +3,7 @@ const cors = require('cors');
 const app = express();
 require('dotenv').config();
 const {createTable} =require('./config/createTable');
-
+const authRoutes=require('./routes/authRoutes');
 // Middleware
 app.use(express.json());
 app.use(cors());
@@ -14,6 +14,8 @@ createTable().then(()=>{
 }).catch(error=>{
     console.log(error);
 })
+
+app.use('/api/auth',authRoutes);
 
 app.get('/', (req, res) => {
     res.json({ message: "Server is running" });
