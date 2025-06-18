@@ -1,26 +1,34 @@
 require('dotenv').config();
-const { Client } = require('pg');
+const { Pool } = require('pg');
 
 const connectionString = process.env.DATABASE_URL;
 
 if (!connectionString) {
   console.error("❌ DATABASE_URL is not set in .env file");
-  process.exit(1);
+  process.exit(1); 
 }
 
-const client = new Client({
+const pool = new Pool({
   connectionString,
   ssl: {
-    rejectUnauthorized: false, // Required for many cloud-hosted PostgreSQL (like Neon, Supabase, etc.)
+    rejectUnauthorized: false, // For Neon or other managed Postgres with SSL
   },
 });
 
-client.connect()
-  .then(() => {
+// Test the connection once at startup
+pool.connect()
+  .then((client) => {
     console.log('✅ Database connected successfully');
+    client.release(); // Release back to pool
   })
   .catch((error) => {
-    console.error(`❌ Error connecting to the database:`, error.stack);
+    console.error('❌ Error connecting to the database:', error.stack);
+    process.exit(1);
   });
 
-module.exports = client;
+// Optional: Catch runtime pool errors
+pool.on('error', (err) => {
+  console.error('❌ Unexpected DB pool error (runtime):', err);
+});
+
+module.exports = pool;

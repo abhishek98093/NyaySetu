@@ -1,8 +1,8 @@
-const client = require('./db');
+const pool = require('./db');
 
 const createTable = async () => {
     try {
-        await client.query(`
+        await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
         user_id SERIAL PRIMARY KEY,
         
@@ -43,11 +43,11 @@ const createTable = async () => {
 module.exports = { createTable };
 
 
-// const client = require('./db');
+// const pool = require('./db');
 
 // const createTable = async () => {
 //     try {
-//         await client.query(`
+//         await pool.query(`
 //             DROP TABLE IF EXISTS 
 //                 crime_search_logs,
 //                 crime_reports,
