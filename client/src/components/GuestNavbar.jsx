@@ -1,17 +1,22 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import {useState,useRef,useEffect} from 'react';
+import { Link, useNavigate ,useLocation} from 'react-router-dom';
 import logo from '../assets/Nyay-setu-logo.svg';
 import menuicon from '../assets/menu-icon.png';
-import closemenu from '../assets/close.png'
+import closemenu from '../assets/close.png';
 const GuestNavbar = () => {
     const navLinks = [];
+    const navigate=useNavigate();
+    const location=useLocation();
 
-    const ref = React.useRef(null)
+    const ref = useRef(null)
 
-    const [isScrolled, setIsScrolled] = React.useState(false);
-    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const islogin=location.pathname.includes("login") ;
+    const issignup=location.pathname.includes("signup") ;
+    const ishome=location.pathname==='/';
 
-    React.useEffect(() => {
+    useEffect(() => {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 10);
         };
@@ -41,12 +46,15 @@ const GuestNavbar = () => {
                 {/* Desktop Right */}
                 <div className="hidden md:flex items-center gap-4">
                     {/* <img src={menuicon} alt="search" className={`${isScrolled && 'invert'} h-7 transition-all duration-500`} /> */}
-                    <button className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500">
+                    {(ishome || issignup) && <button onClick={()=>navigate('/login')} className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500">
                         Login
-                    </button>
-                    <button className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500">
+                    </button> }
+                    {(ishome || islogin) &&  <button  onClick={()=>navigate('/signup')} className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500">
                         Signup
-                    </button>
+                    </button> }
+                    {(issignup || islogin)  && <button onClick={()=>navigate('/')} className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
+                    Home
+                </button> }
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -67,12 +75,15 @@ const GuestNavbar = () => {
                 ))}
 
 
-                <button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
+                {(ishome || issignup) && <button onClick={()=>navigate('/login')}className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
                     Login
-                </button>
-                <button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
+                </button> }
+                {(ishome || islogin)  && <button onClick={()=>navigate('/signup')} className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
                     Signup
-                </button>
+                </button> }
+                {(issignup || islogin)  && <button onClick={()=>navigate('/')} className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
+                    Home
+                </button> }
             </div>
 
             </nav>

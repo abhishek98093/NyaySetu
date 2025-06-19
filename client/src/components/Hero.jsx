@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-
+import { useNavigate } from 'react-router-dom';
 const Hero = () => {
   const messages = [
     "verified citizen alerts",
@@ -8,10 +8,9 @@ const Hero = () => {
     "real-time tracking",
     "transparent reporting",
   ];
-
   const [Index, setIndex] = useState(0);
   const [fade, setFade] = useState(false);
-
+  const navigate=useNavigate();
   useEffect(() => {
     const timeout = setTimeout(() => {
       setFade(false);
@@ -27,7 +26,7 @@ const Hero = () => {
     <div className="flex flex-col items-start justify-center px-6 md:px-16 xl:px-32 bg-[url('/src/assets/hero-bg.png')] bg-no-repeat bg-cover bg-center h-screen text-left">
       
       {/* Top Line */}
-      <p className="text-gray-700 text-sm md:text-base lg:text-lg mb-4">
+      <p className="text-gray-700 text-sm md:text-base lg:text-lg mb-4 rounded-full bg-[#49B9FF]/50 px-3.5 py-1 mt-5" >
         Safety Starts With You
       </p>
 
@@ -48,15 +47,6 @@ const Hero = () => {
         Your reports help authorities respond faster and better.
       </p>
 
-      {/* Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-full text-sm md:text-base transition-all">
-          Login
-        </button>
-        <button className="bg-white hover:bg-gray-100 text-indigo-600 border border-indigo-600 px-8 py-3 rounded-full text-sm md:text-base transition-all">
-          Signup
-        </button>
-      </div>
     </div>
   );
 };
