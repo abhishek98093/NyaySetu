@@ -13,9 +13,8 @@ const createTable = async () => {
         email VARCHAR(255) UNIQUE ,
         password TEXT ,  -- ✅ Added password column here
         aadhaar_number CHAR(12) UNIQUE  CHECK (aadhaar_number ~ '^\d{12}$'),
-
+        role VARCHAR(255),
         -- Verification Flags
-        email_verified BOOLEAN DEFAULT FALSE,
         aadhaar_verified BOOLEAN DEFAULT FALSE,
 
         -- Address Fields
