@@ -5,41 +5,52 @@ const createTable = async () => {
         await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
         user_id SERIAL PRIMARY KEY,
-        
-        -- Basic Details
-        name VARCHAR(255) ,
-        dob DATE ,
-        phone_number VARCHAR(15) UNIQUE ,
-        email VARCHAR(255) UNIQUE ,
-        password TEXT ,  -- ✅ Added password column here
-        aadhaar_number CHAR(12) UNIQUE  CHECK (aadhaar_number ~ '^\d{12}$'),
-        role VARCHAR(255),
-        -- Verification Flags
-        aadhaar_verified BOOLEAN DEFAULT FALSE,
 
-        -- Address Fields
-        address_line1 VARCHAR(255) ,
+        -- Basic Info
+        name VARCHAR(255),
+        dob DATE,
+        gender VARCHAR(20),
+        phone_number VARCHAR(15) UNIQUE,
+        email VARCHAR(255) UNIQUE,
+        password TEXT,
+
+        -- Aadhaar Info
+        aadhaar_number CHAR(12) UNIQUE CHECK (aadhaar_number ~ '^\d{12}$'),
+        aadhaar_verified BOOLEAN DEFAULT FALSE,
+        aadhaar_front_url TEXT,
+        aadhaar_back_url TEXT,
+
+        -- Profile Info
+        profile_picture_url TEXT,
+        is_profile_complete BOOLEAN DEFAULT FALSE,
+        verification_status VARCHAR(20) DEFAULT 'unverified' CHECK (verification_status IN ('unverified', 'pending', 'verified','failed')),
+
+        -- Role
+        role VARCHAR(20) CHECK (role IN ('citizen', 'police', 'admin')),
+
+        -- Address
+        address_line1 VARCHAR(255),
         address_line2 VARCHAR(255),
-        town VARCHAR(100) ,
+        town VARCHAR(100),
         district VARCHAR(100),
-        state VARCHAR(100) ,
-        pincode VARCHAR(10) ,
+        state VARCHAR(100),
+        pincode VARCHAR(10),
         country VARCHAR(100) DEFAULT 'India',
 
         -- Timestamps
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
-`);
+    `);
 
-
-        console.log("Table created or verified successfully");
+        console.log("✅ Table created or verified successfully");
     } catch (err) {
         console.error("❌ Error in creating table:", err.stack);
     }
 };
 
 module.exports = { createTable };
+
 
 
 // const pool = require('./db');

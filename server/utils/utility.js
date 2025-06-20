@@ -3,8 +3,8 @@ require('dotenv').config();
 const generateToken=(user)=>{
     //include userid and name in payload
      return jwt.sign(
-        {userid:user.user_id,
-            userrole:user.role
+        {user_id:user.user_id,
+            user_role:user.role
         },
         process.env.JWT_SECRET,
         { expiresIn:'1h'}

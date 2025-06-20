@@ -126,22 +126,49 @@ const signup = async (req, res) => {
     return res.status(200).json({ valid: true, message: "OTP verified successfully." });
   };
   
-  const login=async(req,res)=>{
-   
-        const {email,password}=req.body;
+  const login = async (req, res) => {
+  const { email, password } = req.body;
 
-    try{
-        const result=await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        const user=result.rows[0];
-        if(!user || !(await bcrypt.compare(password,user.password))){
-                return res.status(401).json({success:false,message:'invalid credential'});
-        }
-        const token=generateToken(user);
-        return res.status(200).json({success:true,message:'login successfull',token});
-    }catch(err){
-        return res.status(500).json({success:true,message:'error loginin in',error:err.message});
+  try {
+    // Step 1: Check if user exists
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'User does not exist, please sign up',
+      });
     }
+
+    // Step 2: Compare passwords
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials',
+      });
+    }
+
+    // Step 3: Generate JWT Token
+    const token = generateToken(user); // Make sure this function exists and works
+
+    return res.status(200).json({
+      success: true,
+      message: 'Login successful',
+      token,
+    });
+
+  } catch (err) {
+    console.error("Login error:", err); // Helpful for debugging server side
+    return res.status(500).json({
+      success: false,
+      message: 'Error logging in',
+      error: err.message,
+    });
+  }
 };
+
 
 const resetPassword = async (req, res) => {
     const { email, password } = req.body;
