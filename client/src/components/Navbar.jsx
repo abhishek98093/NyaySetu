@@ -1,89 +1,73 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import logo from '../assets/Nyay-setu-logo.svg';
-import menuicon from '../assets/menu-icon.png';
-import closemenu from '../assets/close.png'
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import PoliceNavbar from './PoliceNavbar';
+import CitizenNavbar from './CitizenNavbar';
+import AdminNavbar from './AdminNavbar';
+import GuestNavbar from './GuestNavbar';
+import { getToken, isValidToken, getRole } from '../utils/utils';
+
 const Navbar = () => {
-    const navLinks = [
-        { name: 'Home', path: '/' },
-        { name: 'Complaint Section', path: '/' },
-        { name: 'Missing Section', path: '/' },
-        { name: 'Criminal Sighting',path:'/'},
-        { name: 'Info Section',path:'/'},
-        { name: 'About', path: '/' }
-    ];
+    const navigate = useNavigate();
+    const [authState, setAuthState] = useState({
+        token: null,
+        valid: false,
+        role: null,
+        initialized: false
+    });
 
-    const ref = React.useRef(null)
+    // Get current token value
+    const currentToken = getToken();
 
-    const [isScrolled, setIsScrolled] = React.useState(false);
-    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-
-    React.useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 10);
+    // Effect that runs whenever the token changes
+    useEffect(() => {
+        const checkAuth = () => {
+            const token = getToken();
+            setAuthState({
+                token,
+                valid: token ? isValidToken() : false,
+                role: token ? getRole() : null,
+                initialized: true
+            });
         };
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
 
-    return (
-            
-            <nav className={`fixed top-0 left-0 bg-indigo-500 w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${isScrolled ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" : "py-4 md:py-6"}`}>
+        // Initial check
+        checkAuth();
 
-                {/* Logo */}
-                <Link to='/'>
-                    <img src={logo} alt="logo" className={`h-9 ${isScrolled && "invert opacity-80"}`} />
-                </Link>
+        // Set up storage event listener as fallback
+        const storageListener = () => checkAuth();
+        window.addEventListener('storage', storageListener);
 
-                {/* Desktop Nav */}
-                <div className="hidden md:flex items-center gap-4 lg:gap-8">
-                    {navLinks.map((link, i) => (
-                        <a key={i} href={link.path} className={`group flex flex-col gap-0.5 ${isScrolled ? "text-gray-700" : "text-white"}`}>
-                            {link.name}
-                            <div className={`${isScrolled ? "bg-gray-700" : "bg-white"} h-0.5 w-0 group-hover:w-full transition-all duration-300`} />
-                        </a>
-                    ))}
-                    <button className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${isScrolled ? 'text-black' : 'text-white'} transition-all`}>
-                        Dashboard
-                    </button>
-                </div>
+        return () => {
+            window.removeEventListener('storage', storageListener);
+        };
+    }, [currentToken]); // ← Token as dependency
 
-                {/* Desktop Right */}
-                <div className="hidden md:flex items-center gap-4">
-                    {/* <img src={menuicon} alt="search" className={`${isScrolled && 'invert'} h-7 transition-all duration-500`} /> */}
-                    <button className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500">
-                        Login
-                    </button>
-                </div>
+    // Instant logout handling
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        navigate('/login');
+        // No need to manually update state - the effect will handle it
+    };
 
-                {/* Mobile Menu Button */}
-                <div className="flex items-center gap-3 md:hidden">
-                   <img onClick={()=>setIsMenuOpen(!isMenuOpen)} src={menuicon} alt="menu-icon" className={`${isScrolled && "invert"} h-4`} />
-                </div>
+    if (!authState.initialized) {
+        return null;
+    }
 
-            {/* Mobile Menu */}
-            <div className={`fixed top-0 left-0 w-full h-screen bg-white text-base flex flex-col md:hidden items-center justify-center gap-6 font-medium text-gray-800 transition-all duration-500 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
-                <button className="absolute top-4 right-4" onClick={() => setIsMenuOpen(false)}>
-                    <img src={closemenu} alt="menu-icon" className="h-4 w-4" />
-                </button>
+    if (!authState.token || !authState.valid) {
+        return <GuestNavbar />;
+    }
 
-                {navLinks.map((link, i) => (
-                    <a key={i} href={link.path} onClick={() => setIsMenuOpen(false)}>
-                        {link.name}
-                    </a>
-                ))}
-
-                <button className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all">
-                    Dashboard
-                </button>
-
-                <button className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
-                    Login
-                </button>
-            </div>
-
-            </nav>
-    );
-}
+    switch (authState.role?.toLowerCase()) {
+        case 'citizen':
+            return <CitizenNavbar onLogout={handleLogout} />;
+        case 'admin':
+            return <AdminNavbar onLogout={handleLogout} />;
+        case 'police':
+            return <PoliceNavbar onLogout={handleLogout} />;
+        default:
+            return <GuestNavbar />;
+    }
+};
 
 export default Navbar;

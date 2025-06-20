@@ -14,7 +14,7 @@ const GuestNavbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const islogin=location.pathname.includes("login") ;
     const issignup=location.pathname.includes("signup") ;
-    const ishome=location.pathname==='/';
+    const ishome=location.pathname==='/landingpage';
 
     useEffect(() => {
         const handleScroll = () => {
@@ -33,15 +33,6 @@ const GuestNavbar = () => {
                     <img src={logo} alt="logo" className={`h-9 ${isScrolled && "invert opacity-80"}`} />
                 </Link>
 
-                {/* Desktop Nav */}
-                <div className="hidden md:flex items-center gap-4 lg:gap-8">
-                    {navLinks.map((link, i) => (
-                        <a key={i} href={link.path} className={`group flex flex-col gap-0.5 ${isScrolled ? "text-gray-700" : "text-white"}`}>
-                            {link.name}
-                            <div className={`${isScrolled ? "bg-gray-700" : "bg-white"} h-0.5 w-0 group-hover:w-full transition-all duration-300`} />
-                        </a>
-                    ))};
-                </div>
 
                 {/* Desktop Right */}
                 <div className="hidden md:flex items-center gap-4">
@@ -68,11 +59,6 @@ const GuestNavbar = () => {
                     <img src={closemenu} alt="menu-icon" className="h-4 w-4" />
                 </button>
 
-                {navLinks.map((link, i) => (
-                    <a key={i} href={link.path} onClick={() => setIsMenuOpen(false)}>
-                        {link.name}
-                    </a>
-                ))}
 
 
                 {(ishome || issignup) && <button onClick={()=>navigate('/login')}className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">

@@ -57,6 +57,7 @@ const getUserDetails = async (req, res) => {
 
 
 const submitVerification = async (req, res) => {
+
   try {
     const {
       user_id,
@@ -79,14 +80,35 @@ const submitVerification = async (req, res) => {
       return res.status(400).json({ success: false, message: "User ID is required." });
     }
 
-    // ✅ Aadhaar validation before DB query
-    const cleanedAadhaar = aadhaar_number?.trim();
-    if (!/^\d{12}$/.test(cleanedAadhaar)) {
+    // ✅ Enhanced Aadhaar validation
+    if (!aadhaar_number) {
       return res.status(400).json({
         success: false,
-        message: "Invalid Aadhaar number format. It must be exactly 12 digits.",
+        message: "Aadhaar number is required",
       });
     }
+
+     const cleanedAadhaar = String(aadhaar_number).replace(/\D/g, ''); // Remove all non-digits
+    
+    if (cleanedAadhaar.length !== 12) {
+      return res.status(400).json({
+        success: false,
+        message: "Aadhaar must be exactly 12 digits"
+      });
+    }
+
+    if (!/^[2-9]/.test(cleanedAadhaar)) {
+      return res.status(400).json({
+        success: false, 
+        message: "Aadhaar must start with digits 2-9"
+      });
+    }
+
+    // Debug log before DB operation
+    console.log('Aadhaar validation passed:', cleanedAadhaar);
+    console.log("→ Raw aadhaar_number from client:", aadhaar_number);
+console.log("→ Cleaned Aadhaar being used in query:", cleanedAadhaar);
+
 
     const result = await pool.query(
       `UPDATE users SET

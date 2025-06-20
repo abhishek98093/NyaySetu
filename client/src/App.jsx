@@ -1,20 +1,22 @@
 import React from 'react';
-import GuestNavbar  from './components/GuestNavbar';
+import Navbar from './components/Navbar';
 import Footer from './components/Footer'
-import {Route,Routes,useLocation} from 'react-router-dom';
+import {Route,Routes,} from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import CitizenDashboard from './pages/CitizenDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import PoliceDashboard from './pages/PoliceDashboard';
+import HomeRedirect from './components/HomeRedirect';
 const App=()=>{
   return (
     <div>
-      <GuestNavbar />
+      <Navbar />
       <div className='min-h-70vh'>
           <Routes>
-            <Route path='/' element={<HomePage />}/>
+            <Route path='/' element={<HomeRedirect />} />
+            <Route path='/landingpage' element={<HomePage />}/>
             <Route path='/login' element={<LoginPage />} />
             <Route path='/signup' element={<SignupPage />} />
             <Route path='/citizendashboard' element={<CitizenDashboard />} />

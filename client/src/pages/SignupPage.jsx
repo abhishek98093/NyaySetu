@@ -3,30 +3,31 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { sendOtp, verifyOtp, signup } from "../apicalls/api";
 import { toast } from 'react-toastify';
+import { getRole,isValidToken } from "../utils/utils";
 
 const signupSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  dob: z
-    .string()
-    .refine((val) => !isNaN(Date.parse(val)), {
-      message: "Invalid date format",
-    }),
+    name: z.string().min(1, "Name is required"),
+    dob: z
+        .string()
+        .refine((val) => !isNaN(Date.parse(val)), {
+            message: "Invalid date format",
+        }),
 
-  phoneNumber: z
-    .string()
-    .min(10, "Phone number must be at least 10 digits"),
+    phoneNumber: z
+        .string()
+        .min(10, "Phone number must be at least 10 digits"),
 
-  email: z
-    .string()
-    .email("Invalid email address"),
+    email: z
+        .string()
+        .email("Invalid email address"),
 
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "At least one uppercase letter")
-    .regex(/[a-z]/, "At least one lowercase letter")
-    .regex(/[0-9]/, "At least one number")
-    .regex(/[^a-zA-Z0-9]/, "At least one special character"),
+    password: z
+        .string()
+        .min(8, "Password must be at least 8 characters")
+        .regex(/[A-Z]/, "At least one uppercase letter")
+        .regex(/[a-z]/, "At least one lowercase letter")
+        .regex(/[0-9]/, "At least one number")
+        .regex(/[^a-zA-Z0-9]/, "At least one special character"),
 });
 
 
@@ -135,30 +136,30 @@ function SignupPage() {
             const result = await signup(signupData);
 
             if (result.success) {
-            toast.success('Welcome back');
+                toast.success('Welcome ');
 
-            const role = getRole(); 
+                const role = getRole();
 
-            if (role) {
-                switch (role) {
-                    case 'admin':
-                        navigate('/admindashboard');
-                        break;
-                    case 'citizen':
-                        navigate('/citizendashboard');
-                        break;
-                    case 'police':
-                        navigate('/policedashboard');
-                        break;
-                    default:
-                        toast.error("Try signing up again.");
-                        navigate('/login');
+                if (role) {
+                    switch (role) {
+                        case 'admin':
+                            navigate('/admindashboard');
+                            break;
+                        case 'citizen':
+                            navigate('/citizendashboard');
+                            break;
+                        case 'police':
+                            navigate('/policedashboard');
+                            break;
+                        default:
+                            toast.error("Try signing up again.");
+                            navigate('/login');
+                    }
+                } else {
+                    toast.error("try signing up again");
+                    navigate('/login');
                 }
             } else {
-                toast.error("try signing up again");
-                navigate('/login');
-            }
-        } else {
                 setLoading(false);
                 toast.error(result.message);
             }
@@ -166,26 +167,24 @@ function SignupPage() {
         } catch (err) {
             setLoading(false);
 
-            if (err.errors) {
-
-                toast.error(err.errors[0]?.message || "Validation failed");
+            if (err?.errors && err.errors.length > 0) {
+                toast.error(err.errors[0].message);
+            } else if (err?.response?.data?.message) {
+                toast.error(err.response.data.message);
+            } else if (err?.message) {
+                toast.error(err.message);
             } else {
-                // setAlert({
-                //     type:'error',
-                //     title:err.errors[0]?.message || "Validation failed",
-                //     description:'validation failed'
-                // });
-                 toast.error(err.errors[0]?.message || "Validation failed")
-
-
+                toast.error("An unexpected error occurred");
             }
+
         }
     };
 
     return (
         <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-6 mt-20">
             <div className="bg-white shadow-xl rounded-2xl p-6 sm:p-8 md:p-10 w-full max-w-4xl">
-                <h2 className="text-2xl font-bold text-center mb-6">Signup</h2>
+                <h1 className="blocktext-2xl font-bold text-center mb-3">Signup</h1>
+                <h4 className="text-center text-blue-400">Enter correct detail as will be needed while verifying profile</h4>
 
                 {/* {alert && (
                     <div className="fixed top-5 right-5 z-50">

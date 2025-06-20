@@ -15,7 +15,7 @@ const createTable = async () => {
         password TEXT,
 
         -- Aadhaar Info
-        aadhaar_number CHAR(12) UNIQUE CHECK (aadhaar_number ~ '^\d{12}$'),
+        aadhaar_number CHAR(12) ,
         aadhaar_verified BOOLEAN DEFAULT FALSE,
         aadhaar_front_url TEXT,
         aadhaar_back_url TEXT,
