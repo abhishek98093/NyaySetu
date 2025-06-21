@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 const getUserDetails = async (req, res) => {
-  const { id } = req.params; // ✅ id is directly available
+  const id = req.user.user_id; // ✅ id is directly available
 
   if (!id || isNaN(id)) {
     return res.status(400).json({
@@ -55,9 +55,7 @@ const getUserDetails = async (req, res) => {
   }
 };
 
-
 const submitVerification = async (req, res) => {
-
   try {
     const {
       user_id,
@@ -80,7 +78,7 @@ const submitVerification = async (req, res) => {
       return res.status(400).json({ success: false, message: "User ID is required." });
     }
 
-    // ✅ Enhanced Aadhaar validation
+    // Aadhaar validation
     if (!aadhaar_number) {
       return res.status(400).json({
         success: false,
@@ -88,28 +86,23 @@ const submitVerification = async (req, res) => {
       });
     }
 
-     const cleanedAadhaar = String(aadhaar_number).replace(/\D/g, ''); // Remove all non-digits
-    
+    const cleanedAadhaar = String(aadhaar_number).replace(/\D/g, '');
+
     if (cleanedAadhaar.length !== 12) {
       return res.status(400).json({
         success: false,
-        message: "Aadhaar must be exactly 12 digits"
+        message: "Aadhaar must be exactly 12 digits",
       });
     }
 
     if (!/^[2-9]/.test(cleanedAadhaar)) {
       return res.status(400).json({
-        success: false, 
-        message: "Aadhaar must start with digits 2-9"
+        success: false,
+        message: "Aadhaar must start with digits 2-9",
       });
     }
 
-    // Debug log before DB operation
-    console.log('Aadhaar validation passed:', cleanedAadhaar);
-    console.log("→ Raw aadhaar_number from client:", aadhaar_number);
-console.log("→ Cleaned Aadhaar being used in query:", cleanedAadhaar);
-
-
+    // SQL UPDATE with RETURNING *
     const result = await pool.query(
       `UPDATE users SET
         dob = $1,
@@ -128,12 +121,13 @@ console.log("→ Cleaned Aadhaar being used in query:", cleanedAadhaar);
         is_profile_complete = TRUE,
         verification_status = 'pending',
         updated_at = CURRENT_TIMESTAMP
-      WHERE user_id = $14`,
+      WHERE user_id = $14
+      RETURNING *;`, // ✅ This ensures result.rows[0] contains updated user
       [
         dob,
         gender,
         phone_number,
-        cleanedAadhaar, // ✅ use cleaned Aadhaar here
+        cleanedAadhaar,
         address_line1,
         address_line2,
         town,
@@ -151,9 +145,11 @@ console.log("→ Cleaned Aadhaar being used in query:", cleanedAadhaar);
       return res.status(404).json({ success: false, message: "User not found." });
     }
 
+    // ✅ Return updated user data
     return res.status(200).json({
       success: true,
       message: "Verification details submitted successfully.",
+      user: result.rows[0], // renamed to user for clarity
     });
   } catch (err) {
     console.error("❌ Error in submitVerification:", err.stack);
@@ -165,5 +161,77 @@ console.log("→ Cleaned Aadhaar being used in query:", cleanedAadhaar);
 };
 
 
+const submitComplaint = async (req, res) => {
+  try {
+    const {
+      crime_type,
+      description,
+      location_address,
+      town,
+      district,
+      state,
+      pincode,
+      crime_datetime,
+      proof_urls, 
+    } = req.body;
 
-module.exports={getUserDetails,submitVerification}
+    const user_id = req.user?.user_id; 
+
+    if (!user_id || !crime_type || !crime_datetime) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required fields: crime_type or crime_datetime.",
+      });
+    }
+
+    const result = await pool.query(
+      `INSERT INTO complaints (
+        user_id,
+        crime_type,
+        description,
+        location_address,
+        town,
+        district,
+        state,
+        pincode,
+        crime_datetime,
+        proof_urls,
+        status,
+        created_at,
+        updated_at
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+      ) RETURNING *`,
+      [
+        user_id,
+        crime_type,
+        description || '',
+        location_address || '',
+        town || '',
+        district || '',
+        state || '',
+        pincode || '',
+        crime_datetime,
+        proof_urls || [],
+      ]
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "Complaint submitted successfully.",
+      complaint: result.rows[0],
+    });
+  } catch (err) {
+    console.error("❌ Error submitting complaint:", err.stack);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while submitting complaint.",
+    });
+  }
+};
+
+
+
+
+
+module.exports={getUserDetails,submitVerification,submitComplaint}

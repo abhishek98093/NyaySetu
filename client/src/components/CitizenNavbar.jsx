@@ -7,7 +7,7 @@ import React from 'react';
 const CitizenNavbar = () => {
     const navLinks = [
         { name: 'Home', path: '/' },
-        { name: 'Complaint Section', path: '/' },
+        { name: 'Complaint Section', path: '/citizenComplaintPage' },
         { name: 'Missing Section', path: '/' },
         { name: 'Criminal Sighting', path: '/' },
         { name: 'Info Section', path: '/' },

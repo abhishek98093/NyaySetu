@@ -3,9 +3,13 @@ import axios from "axios";
 const API_BASE = "http://localhost:3000"; // or your API URL
 import { toast } from "react-toastify";
 
-export const fetchUserDetails = async (userId) => {
+export const fetchUserDetails = async (token) => {
   try {
-    const res = await axios.get(`${API_BASE}/api/citizen/userDetails/${userId}`);
+    const res = await axios.get(`${API_BASE}/api/citizen/userDetails`, {
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+});
     if (res.data.success) {
       return { success: true, result: res.data.user };
     } else {
@@ -21,13 +25,22 @@ export const fetchUserDetails = async (userId) => {
 
 export const submitVerification = async (formData) => {
   try {
-    const response = await axios.put(`${API_BASE}/api/citizen/submitVerification`, {
-      data: formData,
-    });
+    const token = localStorage.getItem("token"); // Or wherever you're storing it
+
+    const response = await axios.put(
+      `${API_BASE}/api/citizen/submitVerification`,
+      { data: formData },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    );
 
     if (response.data.success) {
       toast.success(response.data.message || "Submitted successfully!");
-      return { success: true };
+      return { success: true, user: response.data.user };
     } else {
       toast.error(response.data.message || "Submission failed.");
       return { success: false };

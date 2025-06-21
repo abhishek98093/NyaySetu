@@ -9,6 +9,7 @@ import CitizenDashboard from './pages/CitizenDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import PoliceDashboard from './pages/PoliceDashboard';
 import HomeRedirect from './components/HomeRedirect';
+import CitizenComplaintPage from './pages/CitizenComplaintPage';
 const App=()=>{
   return (
     <div>
@@ -22,6 +23,7 @@ const App=()=>{
             <Route path='/citizendashboard' element={<CitizenDashboard />} />
             <Route path='/policedashboard' element={<PoliceDashboard />} />
             <Route path='/admindashboard' element={<AdminDashboard />} />
+            <Route path='/citizenComplaintPage' element={<CitizenComplaintPage />} />
           </Routes>
       </div>
       <Footer />

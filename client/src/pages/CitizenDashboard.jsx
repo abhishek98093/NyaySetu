@@ -4,7 +4,7 @@ import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 import ProfileCard from '../components/ProfileCard';
 import { fetchUserDetails } from '../apicalls/citizenapi/api';
-import { getUserId } from '../utils/utils';
+import { getToken, getUserId } from '../utils/utils';
 import { toast } from 'react-toastify';
 
 const CitizenDashboard = () => {
@@ -15,14 +15,14 @@ const CitizenDashboard = () => {
   useEffect(() => {
     const getUserDetails = async () => {
       try {
-        const userId = getUserId();
-        if (!userId) {
+        const token = getToken();
+        if (!token) {
           toast.error("User not logged in or token is invalid.");
           setLoading(false);
           return;
         }
-        
-        const result = await fetchUserDetails(userId);
+
+        const result = await fetchUserDetails(token);
         if (result.success) {
           setUser(result.result);
         } else {
@@ -83,6 +83,7 @@ const CitizenDashboard = () => {
         <ProfileCard
           onClose={() => setShowProfile(!showProfile)}
           user={user}
+          setUser={setUser}
         />
       )}
 
@@ -140,19 +141,26 @@ const CitizenDashboard = () => {
                 {user?.verification_status === 'unverified' && (
                   <h2 className="font-medium text-red-500">Kindly verify your profile</h2>
                 )}
+                {user?.verification_status === 'pending' && (
+                  <h2 className="font-medium text-blue-400 border border-green-600 rounded-sm p-3">
+                    Your profile is currently under review. <br />
+                    We’ll notify you once the verification process is complete.
+                  </h2>
+                )}
+
 
                 <button
                   onClick={() => setShowProfile(!showProfile)}
                   className="w-full mt-6 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition"
                 >
-                  {user?.verification_status === 'unverified' ? 'Update profile' : 'View profile'}
+                  {user?.verification_status === 'unverified' ? 'Upload details for verification' : 'View profile'}
                 </button>
               </div>
             </div>
           </div>
 
           {/* Right Column - Stats (2/3) */}
-            {/* Right Column - Stats (2/3) */}
+          {/* Right Column - Stats (2/3) */}
           <div className="w-full lg:w-2/3 space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -242,8 +250,8 @@ const CitizenDashboard = () => {
           </div>
         </div>
       </div>
-        </div>
-      
+    </div>
+
   );
 };
 
