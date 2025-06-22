@@ -72,6 +72,7 @@ const createTable = async () => {
     ),
 
     description TEXT,
+    title TEXT,
 
     status VARCHAR(20) DEFAULT 'pending' CHECK (
         status IN ('pending', 'in-progress', 'resolved', 'rejected')

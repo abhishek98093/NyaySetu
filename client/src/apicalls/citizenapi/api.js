@@ -51,3 +51,32 @@ export const submitVerification = async (formData) => {
     return { success: false };
   }
 };
+
+
+export const getComplaint = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await axios.get(
+      `${API_BASE}/api/citizen/getComplaint`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.data.success) {
+      toast.success(response.data.message || "Fetched successfully!");
+      return { success: true, complaints: response.data.complaints };
+    } else {
+      toast.error(response.data.message || "Failed to fetch.");
+      return { success: false };
+    }
+  } catch (error) {
+    console.error("Error fetching complaints:", error);
+    toast.error("Server error while fetching complaints.");
+    return { success: false };
+  }
+};
