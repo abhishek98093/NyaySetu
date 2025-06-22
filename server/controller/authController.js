@@ -1,6 +1,6 @@
 const pool=require('../config/db');
 const bcrypt =require('bcrypt');
-const {generateToken,verifyToken}=require('../utils/utility');
+const {generateToken}=require('../utils/utility');
 require('dotenv').config();
 const {mailFormat,setOtp,verifyOtp,generateOtp}=require('../utils/otp');
 
@@ -52,62 +52,72 @@ const sendotp = async (req, res) => {
     });
   }
 };
-
 const signup = async (req, res) => {
   const { name, email, password, phoneNumber, dob } = req.body;
-  const role='citizen';
+  const role = 'citizen';
 
   try {
-    const emailCheck = await pool.query('SELECT 1 FROM users WHERE email = $1', [email]);
+    const emailCheck = await pool.query(
+      'SELECT 1 FROM users WHERE email = $1',
+      [email]
+    );
     if (emailCheck.rows.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "User already registered with this email."
+        message: 'User already registered with this email.',
       });
     }
 
-    const phoneCheck = await pool.query('SELECT 1 FROM users WHERE phone_number = $1', [phoneNumber]);
+    const phoneCheck = await pool.query(
+      'SELECT 1 FROM users WHERE phone_number = $1',
+      [phoneNumber]
+    );
     if (phoneCheck.rows.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "Phone number is already in use."
+        message: 'Phone number is already in use.',
       });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const userResult = await pool.query(
-      `INSERT INTO users (name, email, password, phone_number, dob,role)
-       VALUES ($1, $2, $3, $4, $5,$6)
+      `INSERT INTO users (name, email, password, phone_number, dob, role)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [name, email, hashedPassword, phoneNumber, dob,role]
+      [name, email, hashedPassword, phoneNumber, dob, role]
     );
 
-    const user = userResult.rows[0];
-    const token = generateToken(user);
+    const { password: _, ...safeUser } = userResult.rows[0]; 
+
+    
+    const token = generateToken(safeUser);
 
     return res.status(200).json({
       success: true,
-      message: "User created successfully",
-      token
+      message: 'User created successfully',
+      token:token,
+      user: safeUser,
     });
 
   } catch (err) {
-    console.error("Error in signup route:", err);
+    console.error('Error in signup route:', err);
 
-    if (err.code === '23505') {
+    if (err.code === '23505' && err.constraint) {
       return res.status(400).json({
         success: false,
-        message: err.constraint.includes('email') ? "Email already exists" :
-                 err.constraint.includes('phone') ? "Phone number already exists" :
-                 "Duplicate value error"
+        message: err.constraint.includes('email')
+          ? 'Email already exists'
+          : err.constraint.includes('phone')
+          ? 'Phone number already exists'
+          : 'Duplicate value error',
       });
     }
 
     return res.status(500).json({
       success: false,
-      message: "Error creating user",
-      error: err.message
+      message: 'Error creating user',
+      error: err.message,
     });
   }
 };
@@ -130,8 +140,11 @@ const signup = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Step 1: Check if user exists
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const result = await pool.query(
+      'SELECT * FROM users WHERE email = $1',
+      [email]
+    );
+
     const user = result.rows[0];
 
     if (!user) {
@@ -141,7 +154,6 @@ const signup = async (req, res) => {
       });
     }
 
-    // Step 2: Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({
@@ -150,17 +162,20 @@ const signup = async (req, res) => {
       });
     }
 
-    // Step 3: Generate JWT Token
-    const token = generateToken(user); // Make sure this function exists and works
+    const { password: _, ...safeUser } = user;
 
+    const token = generateToken(safeUser); 
+
+   
     return res.status(200).json({
       success: true,
       message: 'Login successful',
-      token,
+      token:token,
+      user: safeUser,
     });
 
   } catch (err) {
-    console.error("Login error:", err); // Helpful for debugging server side
+    console.error("Login error:", err);
     return res.status(500).json({
       success: false,
       message: 'Error logging in',
@@ -171,32 +186,56 @@ const signup = async (req, res) => {
 
 
 const resetPassword = async (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).json({ message: "Email and new password are required." });
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "Email and new password are required.",
+    });
+  }
+
+  try {
+    
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const user = result.rows[0];
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
     }
 
-    try {
-        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        const user = result.rows[0];
+    
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-        if (!user) {
-            return res.status(404).json({success:false, message: "User not found." });
-        }
+  
+    const resultTwo = await pool.query(
+      'UPDATE users SET password = $1 WHERE email = $2 RETURNING *',
+      [hashedPassword, email]
+    );
 
-        // Hash the new password
-        const hashedPassword = await bcrypt.hash(password, 10);
+    const { password: _, ...safeUser } = resultTwo.rows[0]; 
 
-        // Update the password in the database
-        await pool.query('UPDATE users SET password = $1 WHERE email = $2', [hashedPassword, email]);
+    
+    const token = generateToken(safeUser);
 
-        // Generate a new token
-        const token = generateToken(user);
-        return res.status(200).json({ success:true,message: "Password reset successful.", token :token});
-    } catch (err) {
-        console.error("Reset Password Error:", err);
-        return res.status(500).json({ success:false,message: "Error resetting password", error: err.message });
-    }
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successful.",
+      token:token,
+      user: safeUser,
+    });
+
+  } catch (err) {
+    console.error("Reset Password Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Error resetting password",
+      error: err.message,
+    });
+  }
 };
+
 module.exports={signup,sendotp,verify_Otp,login,resetPassword};

@@ -1,8 +1,6 @@
 const pool=require('../config/db');
 const bcrypt =require('bcrypt');
-const {generateToken,verifyToken}=require('../utils/utility');
 require('dotenv').config();
-const {mailFormat,setOtp,verifyOtp,generateOtp}=require('../utils/otp');
 
 
 const nodemailer = require('nodemailer');
@@ -14,46 +12,6 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS  
   }
 });
-const getUserDetails = async (req, res) => {
-  const id = req.user.user_id; // ✅ id is directly available
-
-  if (!id || isNaN(id)) {
-    return res.status(400).json({
-      success: false,
-      message: "Valid user ID is required"
-    });
-  }
-
-  try {
-    const result = await pool.query(
-      `SELECT * FROM users WHERE user_id = $1`,
-      [parseInt(id)]  // ✅ use id directly
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found"
-      });
-    }
-
-    const user = result.rows[0];
-    delete user.password; // ✅ optional: remove sensitive info
-
-    return res.status(200).json({
-      success: true,
-      user
-    });
-
-  } catch (error) {
-    console.error("Error fetching user details:", error.message);
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: error.message
-    });
-  }
-};
 
 const submitVerification = async (req, res) => {
   try {
@@ -122,7 +80,7 @@ const submitVerification = async (req, res) => {
         verification_status = 'pending',
         updated_at = CURRENT_TIMESTAMP
       WHERE user_id = $14
-      RETURNING *;`, // ✅ This ensures result.rows[0] contains updated user
+      RETURNING *;`,
       [
         dob,
         gender,
@@ -145,12 +103,15 @@ const submitVerification = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found." });
     }
 
-    // ✅ Return updated user data
+    // ✅ Remove password from updated user before sending
+    const { password: _, ...safeUser } = result.rows[0];
+
     return res.status(200).json({
       success: true,
       message: "Verification details submitted successfully.",
-      user: result.rows[0], // renamed to user for clarity
+      user: safeUser,
     });
+
   } catch (err) {
     console.error("❌ Error in submitVerification:", err.stack);
     return res.status(500).json({
@@ -159,6 +120,7 @@ const submitVerification = async (req, res) => {
     });
   }
 };
+
 
 
 const submitComplaint = async (req, res) => {
@@ -236,6 +198,8 @@ const submitComplaint = async (req, res) => {
 
 
 const getComplaint = async (req, res) => {
+  console.log("🔁 /getComplaint route hit");
+
   try {
     const id = req.user.user_id;
 
@@ -245,11 +209,13 @@ const getComplaint = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'No complaints found for this user.',
-      });
-    }
+  return res.status(200).json({
+    success: true,
+    message: 'No complaints found for this user.',
+    complaints: [],
+  });
+}
+    console.log('fetched successfully');
 
     return res.status(200).json({
       success: true,
@@ -267,4 +233,4 @@ const getComplaint = async (req, res) => {
 
 
 
-module.exports={getUserDetails,submitVerification,submitComplaint,getComplaint}
+module.exports={submitVerification,submitComplaint,getComplaint}
