@@ -1,23 +1,23 @@
 import { toast } from 'react-toastify';
-const API_BASE = 'http://localhost:3000';
+
+// Get from environment variables
+const CLOUDINARY_UPLOAD_URL = import.meta.env.VITE_CLOUDINARY_UPLOAD_URL;
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
 export const uploadToCloudinary = async (file) => {
-    
   if (!file) {
-    console.error('No file provided for upload');
     toast.error('Please select a file to upload');
     return { success: false, error: 'No file provided' };
   }
 
-  // Validate file type
   const isImage = file.type.match('image.*');
   const isVideo = file.type.match('video.*');
-  
+
   if (!isImage && !isVideo) {
-    toast.error('Only image (JPEG, PNG) or video (MP4, MOV) files are allowed');
+    toast.error('Only image or video files are allowed');
     return { success: false, error: 'Invalid file type' };
   }
 
-  // Validate file size based on type
   const maxImageSize = 2 * 1024 * 1024; // 2MB
   const maxVideoSize = 10 * 1024 * 1024; // 10MB
 
@@ -33,42 +33,36 @@ export const uploadToCloudinary = async (file) => {
 
   const formData = new FormData();
   formData.append('file', file);
-  // Add file type to help backend processing
-  formData.append('fileType', isImage ? 'image' : 'video');
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
   try {
-    const response = await fetch(`${API_BASE}/api/upload/files`, {
+    const response = await fetch(CLOUDINARY_UPLOAD_URL, {
       method: 'POST',
       body: formData,
-      // credentials: 'include' // Uncomment if you need to send cookies
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Upload failed:', errorData);
-      toast.error(errorData.message || 'File upload failed');
-      return { 
-        success: false, 
-        error: errorData.message || 'Upload failed',
-        details: errorData
+      toast.error(errorData.error?.message || 'Upload failed');
+      return {
+        success: false,
+        error: errorData.error?.message || 'Upload failed',
       };
     }
 
     const data = await response.json();
-    return { 
-      success: true, 
-      url: data.url,
+    return {
+      success: true,
+      url: data.secure_url,
       public_id: data.public_id,
-      resource_type: data.resource_type // 'image' or 'video'
+      resource_type: data.resource_type,
     };
-
   } catch (error) {
-    console.error('Network error:', error);
     toast.error('Network error. Please try again.');
-    return { 
-      success: false, 
+    return {
+      success: false,
       error: error.message,
-      isNetworkError: true 
+      isNetworkError: true,
     };
   }
 };

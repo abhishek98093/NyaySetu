@@ -1,6 +1,19 @@
 import React, { useState } from 'react';
+import { uploadToCloudinary } from '../utils/cloudinary';
+import { toast } from 'react-toastify';
+import { submitComplaint } from '../apicalls/citizenapi/api';
+import { useDispatch } from 'react-redux';
+import { crimeTypes } from '../safe/safe';
 
-const CreateComplaint = ({ onClose, setNewComplaint }) => {
+const CreateComplaint = ({ onClose }) => {
+  const dispatch = useDispatch();
+
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [uploadingStatus, setUploadingStatus] = useState([]);
+  const [files, setFiles] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
     crime_type: '',
     description: '',
@@ -12,58 +25,92 @@ const CreateComplaint = ({ onClose, setNewComplaint }) => {
     crime_datetime: '',
   });
 
-  const [files, setFiles] = useState([]);
-  const [errors, setErrors] = useState({});
-
-  const crimeTypes = [
-    'Theft',
-    'Vandalism',
-    'Assault',
-    'Fraud',
-    'Burglary',
-    'Public Nuisance',
-    'Drug Abuse',
-    'Other',
-  ];
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const newFiles = Array.from(e.target.files);
+
     if (files.length + newFiles.length > 3) {
-      alert('You can upload a maximum of 3 files');
+      toast.info('You can upload a maximum of 4 files');
       return;
     }
-    setFiles(prev => [...prev, ...newFiles]);
+
+    setFiles((prev) => [...prev, ...newFiles]);
+    setUploadingStatus((prev) => [...prev, ...newFiles.map(() => 'Uploading...')]);
+
+    for (let i = 0; i < newFiles.length; i++) {
+      const file = newFiles[i];
+      const index = files.length + i;
+
+      const res = await uploadToCloudinary(file);
+
+      if (res.success) {
+        setUploadedFiles((prev) => [
+          ...prev,
+          { url: res.url, public_id: res.public_id, type: res.resource_type },
+        ]);
+        setUploadingStatus((prev) => {
+          const updated = [...prev];
+          updated[index] = 'Uploaded';
+          return updated;
+        });
+      } else {
+        setUploadingStatus((prev) => {
+          const updated = [...prev];
+          updated[index] = 'Failed';
+          return updated;
+        });
+      }
+    }
   };
 
   const handleRemoveFile = (index) => {
-    setFiles(prev => prev.filter((_, i) => i !== index));
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+    setUploadingStatus((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     const newErrors = {};
     for (const key in formData) {
       if (!formData[key]) newErrors[key] = `${key.replace('_', ' ')} is required`;
     }
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
 
-    const formDataWithFiles = new FormData();
-    for (const key in formData) {
-      formDataWithFiles.append(key, formData[key]);
+    if (!crimeTypes.includes(formData.crime_type)) {
+      newErrors.crime_type = 'Invalid crime type selected';
     }
-    files.forEach(file => {
-      formDataWithFiles.append('proof_urls', file);
-    });
 
-    // Call API here
-    console.log('Submitting complaint:', formDataWithFiles);
+    if (uploadedFiles.length === 0) {
+      newErrors.proofs = 'At least one file must be uploaded';
+    }
+
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      setIsSubmitting(false);
+      return;
+    }
+
+    const payload = {
+      ...formData,
+      proof_urls: uploadedFiles.map((f) => f.url),
+    };
+
+    console.log('Ready to submit complaint:', payload);
+    const result = await submitComplaint(payload, dispatch);
+
+    if (result.success) {
+      toast.success('Complaint submitted!');
+      onClose(); // close modal or reset
+    } else {
+      toast.error(result.error || 'Submission failed');
+    }
+    setIsSubmitting(false);
   };
 
   return (
@@ -76,19 +123,15 @@ const CreateComplaint = ({ onClose, setNewComplaint }) => {
       
       {/* Modal Container with animation */}
       <div className="flex items-center justify-center min-h-screen p-4 sm:p-6">
-        {/* Modal Content with max-height for laptop screens */}
+        {/* Modal Content */}
         <div 
-          className="relative bg-white rounded-lg shadow-xl w-full max-w-3xl"
-          style={{
-            maxHeight: '85vh',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-          }}
+          className="relative bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Close button with better styling */}
+          {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors duration-200"
+            className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors duration-200 bg-white rounded-full p-1 shadow-sm"
             aria-label="Close"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,131 +139,152 @@ const CreateComplaint = ({ onClose, setNewComplaint }) => {
             </svg>
           </button>
 
-          {/* Header with gradient */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-500 rounded-t-lg p-4">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
             <h2 className="text-2xl font-bold text-white">File New Complaint</h2>
+            <p className="text-blue-100 text-sm mt-1">Provide details about the incident</p>
           </div>
 
-          {/* Form content with scrollable area */}
-          <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(85vh - 120px)' }}>
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Crime Type */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Crime Type *</label>
-                <select
-                  name="crime_type"
-                  value={formData.crime_type}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 border ${errors.crime_type ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition duration-150`}
-                >
-                  <option value="">Select Crime Type</option>
-                  {crimeTypes.map(type => (
-                    <option key={type} value={type} className="py-1">{type}</option>
-                  ))}
-                </select>
-                {errors.crime_type && (
-                  <p className="mt-1 text-sm text-red-600">{errors.crime_type}</p>
-                )}
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows={4}
-                  className={`w-full px-3 py-2 border ${errors.description ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition duration-150`}
-                  placeholder="Provide detailed information about the incident..."
-                ></textarea>
-                {errors.description && (
-                  <p className="mt-1 text-sm text-red-600">{errors.description}</p>
-                )}
-              </div>
-
-              {/* Location Details */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Location Details</h3>
-                
+          {/* Form content */}
+          <div className="p-6 overflow-y-auto max-h-[calc(100vh-180px)]">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 gap-6">
+                {/* Crime Type */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
-                  <input
-                    type="text"
-                    name="location_address"
-                    value={formData.location_address}
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Crime Type *</label>
+                  <select
+                    name="crime_type"
+                    value={formData.crime_type}
                     onChange={handleChange}
-                    className={`w-full px-3 py-2 border ${errors.location_address ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition duration-150`}
+                    className={`w-full px-4 py-2.5 border ${errors.crime_type ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200`}
+                  >
+                    <option value="">Select Crime Type</option>
+                    {crimeTypes.map(type => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
+                  {errors.crime_type && (
+                    <p className="mt-1.5 text-sm text-red-600">{errors.crime_type}</p>
+                  )}
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Description *</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows={4}
+                    className={`w-full px-4 py-2.5 border ${errors.description ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200`}
+                    placeholder="Provide detailed information about the incident..."
+                  ></textarea>
+                  {errors.description && (
+                    <p className="mt-1.5 text-sm text-red-600">{errors.description}</p>
+                  )}
+                </div>
+
+                {/* Location Details */}
+                <div className="space-y-4">
+                  <div className="border-b border-gray-200 pb-2">
+                    <h3 className="text-lg font-semibold text-gray-800">Location Details</h3>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Address *</label>
+                    <input
+                      type="text"
+                      name="location_address"
+                      value={formData.location_address}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2.5 border ${errors.location_address ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200`}
+                    />
+                    {errors.location_address && (
+                      <p className="mt-1.5 text-sm text-red-600">{errors.location_address}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Town/City *</label>
+                      <input
+                        type="text"
+                        name="town"
+                        value={formData.town}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-2.5 border ${errors.town ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200`}
+                      />
+                      {errors.town && (
+                        <p className="mt-1.5 text-sm text-red-600">{errors.town}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">District *</label>
+                      <input
+                        type="text"
+                        name="district"
+                        value={formData.district}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-2.5 border ${errors.district ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200`}
+                      />
+                      {errors.district && (
+                        <p className="mt-1.5 text-sm text-red-600">{errors.district}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">State *</label>
+                      <input
+                        type="text"
+                        name="state"
+                        value={formData.state}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-2.5 border ${errors.state ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200`}
+                      />
+                      {errors.state && (
+                        <p className="mt-1.5 text-sm text-red-600">{errors.state}</p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Pincode *</label>
+                      <input
+                        type="text"
+                        name="pincode"
+                        value={formData.pincode}
+                        onChange={handleChange}
+                        className={`w-full px-4 py-2.5 border ${errors.pincode ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200`}
+                      />
+                      {errors.pincode && (
+                        <p className="mt-1.5 text-sm text-red-600">{errors.pincode}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Date/Time Input */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Date & Time of Incident *</label>
+                  <input
+                    type="datetime-local"
+                    name="crime_datetime"
+                    value={formData.crime_datetime}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-2.5 border ${errors.crime_datetime ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200`}
                   />
+                  {errors.crime_datetime && (
+                    <p className="mt-1.5 text-sm text-red-600">{errors.crime_datetime}</p>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Town/City *</label>
-                    <input
-                      type="text"
-                      name="town"
-                      value={formData.town}
-                      onChange={handleChange}
-                      className={`w-full px-3 py-2 border ${errors.town ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition duration-150`}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">District *</label>
-                    <input
-                      type="text"
-                      name="district"
-                      value={formData.district}
-                      onChange={handleChange}
-                      className={`w-full px-3 py-2 border ${errors.district ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition duration-150`}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">State *</label>
-                    <input
-                      type="text"
-                      name="state"
-                      value={formData.state}
-                      onChange={handleChange}
-                      className={`w-full px-3 py-2 border ${errors.state ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition duration-150`}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Pincode *</label>
-                    <input
-                      type="text"
-                      name="pincode"
-                      value={formData.pincode}
-                      onChange={handleChange}
-                      className={`w-full px-3 py-2 border ${errors.pincode ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition duration-150`}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Date/Time */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date & Time of Incident *</label>
-                <input
-                  type="datetime-local"
-                  name="crime_datetime"
-                  value={formData.crime_datetime}
-                  onChange={handleChange}
-                  className={`w-full px-3 py-2 border ${errors.crime_datetime ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 transition duration-150`}
-                />
-              </div>
-
-              {/* File Upload */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Upload Evidence (Max 3 files)</label>
-                <div className="flex items-center gap-3">
-                  <label className="flex-1 cursor-pointer">
-                    <div className="flex flex-col items-center justify-center px-6 py-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 transition duration-150">
-                      <svg className="w-10 h-10 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {/* File Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Upload Evidence (Max 3 files)</label>
+                  <label className="flex flex-col items-center justify-center w-full p-6 border-2 border-dashed border-gray-300 rounded-xl hover:border-blue-500 transition duration-200 cursor-pointer bg-gray-50 hover:bg-gray-100">
+                    <div className="flex flex-col items-center justify-center">
+                      <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                       </svg>
-                      <span className="text-sm text-gray-600">Click to upload or drag and drop</span>
-                      <span className="text-xs text-gray-500">PDF, DOC, JPG, PNG (Max 3 files)</span>
+                      <p className="text-sm text-gray-600 font-medium">Drag and drop files here</p>
+                      <p className="text-xs text-gray-500 mt-1">or click to browse (PDF, DOC, JPG, PNG)</p>
                     </div>
                     <input
                       type="file"
@@ -230,41 +294,71 @@ const CreateComplaint = ({ onClose, setNewComplaint }) => {
                       className="hidden"
                     />
                   </label>
-                </div>
-                
-                {/* File previews */}
-                {files.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {files.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
-                        <div className="flex items-center space-x-2">
-                          <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                          </svg>
-                          <span className="text-sm text-gray-700 truncate max-w-xs">{file.name}</span>
+                  
+                  {/* File previews with status */}
+                  {files.length > 0 && (
+                    <div className="mt-4 space-y-3">
+                      {files.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                          <div className="flex items-center space-x-3">
+                            <div className={`p-2 rounded-md ${
+                              uploadingStatus[index] === 'Uploaded' ? 'bg-green-100 text-green-600' :
+                              uploadingStatus[index] === 'Failed' ? 'bg-red-100 text-red-600' :
+                              'bg-blue-100 text-blue-600'
+                            }`}>
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-gray-700 truncate max-w-xs">{file.name}</p>
+                              <p className={`text-xs ${
+                                uploadingStatus[index] === 'Uploaded' ? 'text-green-600' :
+                                uploadingStatus[index] === 'Failed' ? 'text-red-600' : 'text-blue-600'
+                              }`}>
+                                {uploadingStatus[index]}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile(index)}
+                            className="text-gray-400 hover:text-red-500 p-1 rounded-full hover:bg-gray-100 transition duration-150"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveFile(index)}
-                          className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition duration-150"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                  {errors.proofs && (
+                    <p className="mt-1.5 text-sm text-red-600">{errors.proofs}</p>
+                  )}
+                </div>
               </div>
 
               {/* Submit Button */}
-              <div className="pt-4">
+              <div className="pt-2">
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white py-3 px-4 rounded-md shadow-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150"
+                  disabled={isSubmitting}
+                  className={`w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                    isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+                  }`}
                 >
-                  Submit Complaint
+                  {isSubmitting ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </span>
+                  ) : (
+                    'Submit Complaint'
+                  )}
                 </button>
               </div>
             </form>

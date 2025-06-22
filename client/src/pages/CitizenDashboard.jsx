@@ -24,18 +24,23 @@ const CitizenDashboard = () => {
   const now = Date.now();
   const shouldFetch = !loadedAt || now - loadedAt > 5 * 60 * 1000;
 
-  if (shouldFetch) {
-    getComplaint(dispatch);
-  } else {
-    setLoading(false);
-  }
+  const fetchData = async () => {
+    if (shouldFetch) {
+      await getComplaint(dispatch); 
+    } else {
+      setLoading(false);
+    }
+  };
+
+  fetchData(); 
 
   const interval = setInterval(() => {
-    getComplaints();
+    getComplaint(dispatch); 
   }, 5 * 60 * 1000);
 
-  return () => clearInterval(interval); // clean up on unmount
+  return () => clearInterval(interval); 
 }, [dispatch, loadedAt]);
+
 
 
   const solvedCount = complaints.filter(c => c.status === 'resolved').length;

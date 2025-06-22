@@ -68,3 +68,43 @@ export const getComplaint = async (dispatch) => {
     return { success: false };
   }
 };
+
+
+
+export const submitComplaint = async (complaintData,dispatch) => {
+  try {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      toast.error("You must be logged in to submit a complaint.");
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    const response = await axios.post(
+      `${API_BASE}/api/citizen/submitComplaint`,
+      complaintData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    toast.success('Complaint submitted successfully!');
+    dispatch(addComplaint({complaint:response.data.complaint,loadedAt:Date.now()}));
+    return {
+      success: true,
+    };
+  } catch (error) {
+    console.error('❌ Submit complaint error:', error);
+
+    const message =
+      error.response?.data?.message || 'Server error while submitting complaint.';
+
+    toast.error(message);
+    return {
+      success: false,
+    };
+  }
+};

@@ -3,7 +3,6 @@ import ComplaintCard from '../components/ComplaintCard';
 import AddCommentIcon from '@mui/icons-material/AddComment';
 import { Button } from "@mui/material";
 import CreateComplaint from '../components/CreateComplaint';
-import { getComplaint } from '../apicalls/citizenapi/api';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
 
@@ -55,7 +54,6 @@ const CitizenComplaintPage = () => {
     <div className="min-h-screen flex flex-col bg-gray-50">
       {newComplaint && (
         <CreateComplaint
-          setNewComplaint={setNewComplaint}
           onClose={onClose}
         />
       )}
