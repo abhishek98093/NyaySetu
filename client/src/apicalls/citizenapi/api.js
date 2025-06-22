@@ -2,28 +2,11 @@
 import axios from "axios";
 const API_BASE = "http://localhost:3000"; // or your API URL
 import { toast } from "react-toastify";
+import { addComplaint, setComplaints } from "../../slices/complaintSlice";
+import { set } from "zod";
+import { setUser } from "../../slices/userSlice";
 
-export const fetchUserDetails = async (token) => {
-  try {
-    const res = await axios.get(`${API_BASE}/api/citizen/userDetails`, {
-  headers: {
-    Authorization: `Bearer ${token}`,
-  },
-});
-    if (res.data.success) {
-      return { success: true, result: res.data.user };
-    } else {
-      return { success: false, result: res.data.message || "Could not fetch user details." };
-    }
-  } catch (err) {
-    return {
-      success: false,
-      result: err.response?.data?.message || "Something went wrong."
-    };
-  }
-};
-
-export const submitVerification = async (formData) => {
+export const submitVerification = async (formData,dispatch) => {
   try {
     const token = localStorage.getItem("token"); // Or wherever you're storing it
 
@@ -39,8 +22,9 @@ export const submitVerification = async (formData) => {
     );
 
     if (response.data.success) {
+      dispatch(setUser({user:response.data.user,logedAt:Date.now()}));
       toast.success(response.data.message || "Submitted successfully!");
-      return { success: true, user: response.data.user };
+      return { success: true };
     } else {
       toast.error(response.data.message || "Submission failed.");
       return { success: false };
@@ -53,7 +37,7 @@ export const submitVerification = async (formData) => {
 };
 
 
-export const getComplaint = async () => {
+export const getComplaint = async (dispatch) => {
   try {
     const token = localStorage.getItem("token");
 
@@ -68,8 +52,12 @@ export const getComplaint = async () => {
     );
 
     if (response.data.success) {
+      dispatch(setComplaints({
+  complaints: response.data.complaints,
+  loadedAt: Date.now()
+}));
       toast.success(response.data.message || "Fetched successfully!");
-      return { success: true, complaints: response.data.complaints };
+      return { success: true};
     } else {
       toast.error(response.data.message || "Failed to fetch.");
       return { success: false };

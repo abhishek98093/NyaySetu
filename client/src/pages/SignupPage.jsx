@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { sendOtp, verifyOtp, signup } from "../apicalls/api";
 import { toast } from 'react-toastify';
-import { getRole,isValidToken } from "../utils/utils";
+import { getRole } from "../utils/utils";
+import { useDispatch } from "react-redux";
 
 const signupSchema = z.object({
     name: z.string().min(1, "Name is required"),
@@ -32,6 +33,7 @@ const signupSchema = z.object({
 
 
 function SignupPage() {
+    const dispatch=useDispatch();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 
@@ -133,7 +135,7 @@ function SignupPage() {
                 password: formData.password
             };
 
-            const result = await signup(signupData);
+            const result = await signup(signupData,dispatch);
 
             if (result.success) {
                 toast.success('Welcome ');

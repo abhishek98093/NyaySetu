@@ -3,56 +3,65 @@ import { Doughnut, Bar } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 import ProfileCard from '../components/ProfileCard';
-import { fetchUserDetails } from '../apicalls/citizenapi/api';
+import { getComplaint} from '../apicalls/citizenapi/api';
 import { getToken, getUserId } from '../utils/utils';
 import { toast } from 'react-toastify';
+import { useSelector } from 'react-redux';
+import { setUser } from '../slices/userSlice';
+import { useDispatch } from 'react-redux';
+
 
 const CitizenDashboard = () => {
-  const [user, setUser] = useState(null);
+
+  const dispatch=useDispatch();
+  const complaints = useSelector(state => state.complaints.complaints);
+    const user = useSelector(state => state.user.user);
+    const loadedAt=useSelector(state=>state.complaints.loadedAt);
   const [loading, setLoading] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
 
-  useEffect(() => {
-    const getUserDetails = async () => {
-      try {
-        const token = getToken();
-        if (!token) {
-          toast.error("User not logged in or token is invalid.");
-          setLoading(false);
-          return;
-        }
+ useEffect(() => {
+  const now = Date.now();
+  const shouldFetch = !loadedAt || now - loadedAt > 5 * 60 * 1000;
 
-        const result = await fetchUserDetails(token);
-        if (result.success) {
-          setUser(result.result);
-        } else {
-          toast.error(result.result || "Failed to load user data");
-        }
-      } catch (error) {
-        toast.error("An error occurred while fetching user details");
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  if (shouldFetch) {
+    getComplaint(dispatch);
+  } else {
+    setLoading(false);
+  }
 
-    getUserDetails();
-  }, []);
+  const interval = setInterval(() => {
+    getComplaints();
+  }, 5 * 60 * 1000);
 
-  // Sample data for charts
-  const solvedData = {
-    labels: ['Solved', 'Pending', 'Rejected'],
+  return () => clearInterval(interval); // clean up on unmount
+}, [dispatch, loadedAt]);
+
+
+  const solvedCount = complaints.filter(c => c.status === 'resolved').length;
+const pendingCount = complaints.filter(c => c.status === 'pending').length;
+const progressCount = complaints.filter(c => c.status === 'in-progress').length;
+const rejectedCount = complaints.filter(c => c.status === 'rejected').length;
+
+const solvedData = {
+  labels: ['Resolved', 'Pending', 'In-Progress', 'Rejected'],
+  datasets: [{
+    data: [solvedCount, pendingCount, progressCount, rejectedCount],
+    backgroundColor: ['#10B981', '#F59E0B', '#3B82F6', '#EF4444'], // green, yellow, blue, red
+  }]
+};
+const monthlyCounts = Array(12).fill(0);
+complaints.forEach(c => {
+    const date = new Date(c.created_at);
+    const month = date.getMonth();
+    monthlyCounts[month]++;
+  });
+
+ const activityData = {
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
     datasets: [{
-      data: [65, 15, 20],
-      backgroundColor: ['#10B981', '#F59E0B', '#EF4444'],
-    }]
-  };
-
-  const activityData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [{
-      label: 'Problems Solved',
-      data: [12, 19, 8, 15, 12, 17],
+      label: 'Complaints Submitted',
+      data: monthlyCounts,
       backgroundColor: '#3B82F6',
     }]
   };
@@ -83,7 +92,6 @@ const CitizenDashboard = () => {
         <ProfileCard
           onClose={() => setShowProfile(!showProfile)}
           user={user}
-          setUser={setUser}
         />
       )}
 

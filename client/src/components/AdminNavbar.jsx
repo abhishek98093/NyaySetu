@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import logo from '../assets/Nyay-setu-logo.svg';
 import menuicon from '../assets/menu-icon.png';
 import closemenu from '../assets/close.png';
+import useLogout from '../utils/useLogout';
 
 const AdminNavbar = () => {
     const navigate = useNavigate();
@@ -18,8 +19,7 @@ const AdminNavbar = () => {
     const [isScrolled, setIsScrolled] = React.useState(false);
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const handleLogout=()=>{
-        localStorage.removeItem("token");
-        navigate('/');
+        useLogout();
     }
 
     React.useEffect(() => {

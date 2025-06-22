@@ -5,9 +5,10 @@ import { Button } from "@mui/material";
 import CreateComplaint from '../components/CreateComplaint';
 import { getComplaint } from '../apicalls/citizenapi/api';
 import { toast } from 'react-toastify';
+import { useSelector } from 'react-redux';
 
 const CitizenComplaintPage = () => {
-  const [complaints, setComplaints] = useState([]);
+   const complaints = useSelector(state => state.complaints.complaints);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,36 +22,7 @@ const CitizenComplaintPage = () => {
     setNewComplaint(!newComplaint);
   };
 
-  useEffect(() => {
-    let isMounted = true;
 
-    const fetchComplaints = async () => {
-      if (!isMounted) return;
-      setLoading(true);
-
-      try {
-        const result = await getComplaint();
-        if (result.success) {
-          setComplaints(result.complaints);
-        } else {
-          toast.error(result.message || "Failed to fetch complaints.");
-        }
-      } catch (error) {
-        toast.error(error.message || "Error fetching complaints.");
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    fetchComplaints();
-
-    const intervalId = setInterval(fetchComplaints, 5 * 60 * 1000);
-
-    return () => {
-      isMounted = false;
-      clearInterval(intervalId);
-    };
-  }, []);
 
   const filteredComplaints = complaints.filter(complaint => {
     // Normalize status for comparison

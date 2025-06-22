@@ -1,5 +1,6 @@
 import axios from 'axios'
 const API_BASE = 'http://localhost:3000';
+import {setUser} from '../slices/userSlice';
 
 export const sendOtp = async (email) => {
     const data = {
@@ -25,7 +26,7 @@ export const sendOtp = async (email) => {
         }
     }
 };
-export const signup = async (Formdata) => {
+export const signup = async (Formdata,dispatch) => {
     const data = {
         name:Formdata.name, 
         email:Formdata.email,
@@ -38,7 +39,8 @@ export const signup = async (Formdata) => {
         const result = await axios.post(`${API_BASE}/api/auth/signup`, data);
         if (result.data.token) {
             localStorage.setItem("token", result.data.token);
-            return {success:true,token:result.data.token};
+            dispatch(setUser({user:result.data.user,logedAt:Date.now()}));
+            return {success:true};
         }
         return { success:false,message: result.data.message };
     } catch (error) {
@@ -75,7 +77,7 @@ export const verifyOtp = async (email, otp) => {
     }
 };
 
-export const login = async (Formdata) => {
+export const login = async (Formdata,dispatch) => {
     const data = {
         email:Formdata.email,
         password:Formdata.password,
@@ -85,6 +87,7 @@ export const login = async (Formdata) => {
         const result = await axios.post(`${API_BASE}/api/auth/login`, data);
         if (result.data.token) {
             localStorage.setItem("token", result.data.token);
+            dispatch(setUser({user:result.data.user,logedAt:Date.now()}));
             return {success:true,token:result.data.token};
         }
         return { success:false,message: result.data.message };
@@ -97,7 +100,7 @@ export const login = async (Formdata) => {
 }
 
 
-export const resetPassword = async (Data) => {
+export const resetPassword = async (Data,dispatch) => {
     const data = {
         email:Data.email,
         password:Data.password
@@ -108,6 +111,7 @@ export const resetPassword = async (Data) => {
 
         if (result.data.token) {
             localStorage.setItem("token", result.data.token);
+            dispatch(setUser({user:result.data.user,logedAt:Date.now()}));
             return { success:true, token: result.data.token }; // Return the token if password reset is successful
         } else {
             return { error: "No token received after resetting password." ,message:'system down , try after some time'};

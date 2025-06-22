@@ -4,6 +4,7 @@ import { z } from "zod";
 import { sendOtp, verifyOtp, login, resetPassword } from "../apicalls/api";
 import { toast } from 'react-toastify';
 import { getRole } from "../utils/utils";
+import { useDispatch } from "react-redux";
 
 const loginSchema = z.object({
   email: z
@@ -23,6 +24,7 @@ const forgotSchema = z.object({
 
 
 function LoginPage() {
+    const dispatch=useDispatch();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [countdown, setCountdown] = useState(0);
@@ -123,7 +125,7 @@ function LoginPage() {
             return;
         }
 
-        const result = await login(formData);
+        const result = await login(formData,dispatch);
 
         if (result.success) {
             toast.success('Welcome back');
