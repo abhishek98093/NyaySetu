@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { z } from 'zod';
 import { toast } from 'react-toastify';
 import { uploadToCloudinary } from '../utils/cloudinary';
-import { submitVerification } from '../apicalls/citizenapi/api';
+import { submitVerification } from '../apicalls/citizenapi';
 import { useDispatch } from 'react-redux';
 
 const ProfileCard = ({ onClose, user }) => {

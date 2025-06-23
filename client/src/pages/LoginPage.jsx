@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { sendOtp, verifyOtp, login, resetPassword } from "../apicalls/api";
+import { sendOtp, verifyOtp, login, resetPassword } from "../apicalls/authapi";
 import { toast } from 'react-toastify';
 import { getRole } from "../utils/utils";
 import { useDispatch } from "react-redux";

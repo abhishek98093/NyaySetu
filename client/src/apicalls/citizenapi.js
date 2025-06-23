@@ -2,9 +2,9 @@
 import axios from "axios";
 const API_BASE = "http://localhost:3000"; // or your API URL
 import { toast } from "react-toastify";
-import { addComplaint, setComplaints } from "../../slices/complaintSlice";
+import { addComplaint, setComplaints } from "../slices/complaintSlice";
 import { set } from "zod";
-import { setUser } from "../../slices/userSlice";
+import { setUser } from "../slices/userSlice";
 
 export const submitVerification = async (formData,dispatch) => {
   try {
@@ -64,7 +64,7 @@ export const getComplaint = async (dispatch) => {
     }
   } catch (error) {
     console.error("Error fetching complaints:", error);
-    toast.error("Server error while fetching complaints.");
+    toast.error(error.message || "Server error while fetching complaints.");
     return { success: false };
   }
 };

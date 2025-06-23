@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { toast } from 'react-toastify';
-import { submitComplaint } from '../apicalls/citizenapi/api';
+import { submitComplaint } from '../apicalls/citizenapi';
 import { useDispatch } from 'react-redux';
 import { crimeTypes } from '../safe/safe';
 

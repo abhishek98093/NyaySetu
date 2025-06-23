@@ -1,25 +1,28 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from '../assets/Nyay-setu-logo.svg';
 import menuicon from '../assets/menu-icon.png';
 import closemenu from '../assets/close.png';
+import React from 'react';
 import useLogout from '../utils/useLogout';
 
 const AdminNavbar = () => {
-    const navigate = useNavigate();
-
     const navLinks = [
-        { name: 'Complaint Section', path: '/complaints' },
-        { name: 'Missing Section', path: '/missing' },
-        { name: 'Criminal Section', path: '/criminals' },
-        { name: 'Police Section', path: '/police' },
-        { name: 'About', path: '/about' }
+        { name: 'Home', path: '/' },
+        { name: 'Personnel Management', path: '/admincomplaintpage' },
+        { name: 'Performance analyser', path: '/' },
+        { name: 'Report', path: '/' },
+        { name: 'Info Section', path: '/' },
+        { name: 'About', path: '/' }
     ];
+
+    const navigate = useNavigate();
 
     const [isScrolled, setIsScrolled] = React.useState(false);
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-    const handleLogout=()=>{
-        useLogout();
+    const logout=useLogout();
+    
+    const handleLogout = () => {
+        logout();
     }
 
     React.useEffect(() => {
@@ -52,7 +55,7 @@ const AdminNavbar = () => {
                     </button>
                 ))}
                 <button
-                    onClick={() => navigate('/admindashboard')}
+                    onClick={() => navigate('/citizendashboard')}
                     className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${isScrolled ? 'text-black' : 'text-white'} transition-all`}
                 >
                     Dashboard
@@ -62,7 +65,7 @@ const AdminNavbar = () => {
             {/* Desktop Right */}
             <div className="hidden md:flex items-center gap-4">
                 <button
-                    onClick={() => navigate('/login')}
+                    onClick={() => navigate('/citizendashboard')}
                     className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500"
                 >
                     Profile
@@ -106,7 +109,7 @@ const AdminNavbar = () => {
 
                 <button
                     onClick={() => {
-                        navigate('/');
+                        navigate('/citizendashboard');
                         setIsMenuOpen(false);
                     }}
                     className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all"
@@ -116,25 +119,25 @@ const AdminNavbar = () => {
 
                 <button
                     onClick={() => {
-                        navigate('/login');
+                        navigate('/citizendashboard');
                         setIsMenuOpen(false);
                     }}
                     className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500"
                 >
-                    profile
+                    Profile
                 </button>
                 <button
                     onClick={() => {
-                        handleLogout;
+                        handleLogout();
                         setIsMenuOpen(false);
                     }}
                     className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500"
                 >
-                    LogOut
+                    Logout
                 </button>
             </div>
         </nav>
     );
-};
+}
 
 export default AdminNavbar;
