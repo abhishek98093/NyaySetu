@@ -1,6 +1,6 @@
-const policeWelcome=(EMAIL,PASSWORD)=>{
-    return `
-        <!DOCTYPE html>
+const policeWelcome = (EMAIL, PASSWORD) => {
+  return `
+    <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -25,8 +25,8 @@ const policeWelcome=(EMAIL,PASSWORD)=>{
 
     <div style="background: linear-gradient(to right, #f0f7ff, #e3f2fd); padding: 20px; border-radius: 8px; border-left: 4px solid #1a73e8; margin-bottom: 25px;">
       <h3 style="color: #1a73e8; margin-top: 0; font-size: 18px;">Your Login Credentials:</h3>
-      <p style="margin: 15px 0 10px;"><strong style="color: #0d47a1;">Username (Email):</strong> <span style="background-color: #e3f2fd; padding: 3px 8px; border-radius: 4px; font-family: monospace;">`${EMAIL}`</span></p>
-      <p style="margin: 10px 0;"><strong style="color: #0d47a1;">Temporary Password:</strong> <span style="background-color: #e3f2fd; padding: 3px 8px; border-radius: 4px; font-family: monospace;">`${PASSWORD}`</span></p>
+      <p style="margin: 15px 0 10px;"><strong style="color: #0d47a1;">Username (Email):</strong> <span style="background-color: #e3f2fd; padding: 3px 8px; border-radius: 4px; font-family: monospace;">${EMAIL}</span></p>
+      <p style="margin: 10px 0;"><strong style="color: #0d47a1;">Temporary Password:</strong> <span style="background-color: #e3f2fd; padding: 3px 8px; border-radius: 4px; font-family: monospace;">${PASSWORD}</span></p>
     </div>
 
     <div style="background-color: #fff8e1; padding: 15px; border-radius: 8px; border-left: 4px solid #ffc107; margin-bottom: 25px;">
@@ -55,7 +55,7 @@ const policeWelcome=(EMAIL,PASSWORD)=>{
   </div>
 </body>
 </html>
-    `
-}
+  `;
+};
 
-module.exports={policeWelcome}
+module.exports = { policeWelcome };
