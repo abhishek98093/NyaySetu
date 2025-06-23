@@ -96,6 +96,43 @@ const createTable = async () => {
 
         `);
 
+        await pool.query(`
+    CREATE TABLE IF NOT EXISTS police_details (
+        police_id SERIAL PRIMARY KEY,
+        user_id INT UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
+
+        -- Station Info
+        station_name VARCHAR(255),
+        station_code VARCHAR(50),
+        station_address TEXT,
+        district VARCHAR(100),
+        state VARCHAR(100),
+
+        -- Optional Role Info
+        rank VARCHAR(50),
+        shift_time VARCHAR(50),
+
+        -- Availability & Status
+        is_available BOOLEAN DEFAULT TRUE,  -- for duty assignment
+        status VARCHAR(20) DEFAULT 'active' CHECK (
+            status IN ('active', 'on_leave', 'suspended', 'retired')
+        ),
+
+        -- Contact Info (if needed)
+        official_email VARCHAR(255),
+        emergency_contact VARCHAR(15),
+
+        -- Metadata
+        last_login TIMESTAMP,
+        remarks TEXT,
+
+        -- Timestamps
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+`);
+
+
         console.log("✅ Tables created or verified successfully");
 
     } catch (err) {
