@@ -100,6 +100,8 @@ const createTable = async () => {
     CREATE TABLE IF NOT EXISTS police_details (
         police_id SERIAL PRIMARY KEY,
         user_id INT UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
+        must_reset_password BOOLEAN DEFAULT TRUE,
+
 
         -- Station Info
         station_name VARCHAR(255),
@@ -109,7 +111,8 @@ const createTable = async () => {
         state VARCHAR(100),
 
         -- Optional Role Info
-        rank VARCHAR(50),
+        rank VARCHAR(50) CHECK (rank IN ('Inspector', 'Sub-Inspector')),
+
         shift_time VARCHAR(50),
 
         -- Availability & Status

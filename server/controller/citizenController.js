@@ -198,7 +198,6 @@ const submitComplaint = async (req, res) => {
 
 
 const getComplaint = async (req, res) => {
-  console.log("🔁 /getComplaint route hit");
 
   try {
     const id = req.user.user_id;
@@ -215,7 +214,6 @@ const getComplaint = async (req, res) => {
     complaints: [],
   });
 }
-    console.log('fetched successfully');
 
     return res.status(200).json({
       success: true,
