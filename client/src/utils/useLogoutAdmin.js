@@ -1,20 +1,17 @@
-import { persistor } from '../store/store';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { setComplaints } from '../slices/complaintSlice';
-import { setUser } from '../slices/userSlice';
+import { resetUser} from '../slices/userSlice';
 
-
-const useLogout = () => {
+const useLogoutAdmin = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const logout = () => {
-    persistor.purge();
-    dispatch(setComplaints({ complaints: [], loadedAt: null }));
-    dispatch(setUser({user:[],loadedAt:null}));
+    // ✅ Remove token
     localStorage.removeItem('token');
+    dispatch(resetUser());
+
     toast.success("Logged out successfully");
     navigate('/');
   };
@@ -22,4 +19,4 @@ const useLogout = () => {
   return logout;
 };
 
-export default useLogout;
+export default useLogoutAdmin;

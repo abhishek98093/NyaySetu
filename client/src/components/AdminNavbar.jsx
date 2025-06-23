@@ -3,12 +3,12 @@ import logo from '../assets/Nyay-setu-logo.svg';
 import menuicon from '../assets/menu-icon.png';
 import closemenu from '../assets/close.png';
 import React from 'react';
-import useLogout from '../utils/useLogout';
+import useLogoutAdmin from '../utils/useLogoutAdmin';
 
 const AdminNavbar = () => {
     const navLinks = [
         { name: 'Home', path: '/' },
-        { name: 'Personnel Management', path: '/admincomplaintpage' },
+        { name: 'Personnel Management', path: '/personnelpage' },
         { name: 'Performance analyser', path: '/' },
         { name: 'Report', path: '/' },
         { name: 'Info Section', path: '/' },
@@ -19,7 +19,7 @@ const AdminNavbar = () => {
 
     const [isScrolled, setIsScrolled] = React.useState(false);
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-    const logout=useLogout();
+    const logout=useLogoutAdmin();
     
     const handleLogout = () => {
         logout();
@@ -54,12 +54,6 @@ const AdminNavbar = () => {
                         <div className={`${isScrolled ? "bg-gray-700" : "bg-white"} h-0.5 w-0 group-hover:w-full transition-all duration-300`} />
                     </button>
                 ))}
-                <button
-                    onClick={() => navigate('/citizendashboard')}
-                    className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${isScrolled ? 'text-black' : 'text-white'} transition-all`}
-                >
-                    Dashboard
-                </button>
             </div>
 
             {/* Desktop Right */}
@@ -107,15 +101,6 @@ const AdminNavbar = () => {
                     </button>
                 ))}
 
-                <button
-                    onClick={() => {
-                        navigate('/citizendashboard');
-                        setIsMenuOpen(false);
-                    }}
-                    className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all"
-                >
-                    Dashboard
-                </button>
 
                 <button
                     onClick={() => {

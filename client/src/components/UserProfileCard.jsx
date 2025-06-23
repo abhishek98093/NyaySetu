@@ -7,7 +7,7 @@ const UserProfileCard = ({setShowProfile }) => {
     const user = useSelector(state => state.user.user);
     if (user?.role === "admin") {
     return (
-      <div className="w-full lg:w-1/3">
+      <div className="w-full lg:w-1/4">
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           {/* Profile Header */}
           <div className="bg-indigo-600 p-6 text-center">

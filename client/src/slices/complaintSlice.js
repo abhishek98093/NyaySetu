@@ -25,17 +25,19 @@ const complaintSlice = createSlice({
     },
     deleteComplaint: (state, action) => {
       const deleted = action.payload.complaint;
-      // ✅ fixed: should be filter not calling it as a function
       state.complaints = state.complaints.filter(c => c.complaint_id !== deleted.complaint_id);
     },
+    resetComplaint: () => initialState, // ✅ resets to initialState
   },
 });
 
+// ✅ You missed exporting resetComplaint here
 export const {
   addComplaint,
   setComplaints,
   updateComplaint,
   deleteComplaint,
+  resetComplaint, // ✅ now it's exported
 } = complaintSlice.actions;
 
 export default complaintSlice.reducer;

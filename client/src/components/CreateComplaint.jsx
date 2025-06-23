@@ -16,6 +16,7 @@ const CreateComplaint = ({ onClose }) => {
 
   const [formData, setFormData] = useState({
     crime_type: '',
+    title: '',
     description: '',
     location_address: '',
     town: '',
@@ -116,15 +117,15 @@ const CreateComplaint = ({ onClose }) => {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto font-sans">
       {/* Overlay with smooth transition */}
-      <div 
+      <div
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity duration-300"
         onClick={onClose}
       ></div>
-      
+
       {/* Modal Container with animation */}
       <div className="flex items-center justify-center min-h-screen p-4 sm:p-6">
         {/* Modal Content */}
-        <div 
+        <div
           className="relative bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
@@ -167,6 +168,24 @@ const CreateComplaint = ({ onClose }) => {
                     <p className="mt-1.5 text-sm text-red-600">{errors.crime_type}</p>
                   )}
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Title (try to give an idea in 3 to 4 words) <span className="text-red-500">*</span>
+                  </label>
+
+                  <textarea
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    rows={1}
+                    className={`w-full px-4 py-2.5 border ${errors.title ? 'border-red-500' : 'border-gray-300'} rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200`}
+                    placeholder="e.g. Theft in parking area"
+                  />
+
+                  {errors.title && (
+                    <p className="mt-1.5 text-sm text-red-600">{errors.title}</p>
+                  )}
+                </div>
 
                 {/* Description */}
                 <div>
@@ -189,7 +208,7 @@ const CreateComplaint = ({ onClose }) => {
                   <div className="border-b border-gray-200 pb-2">
                     <h3 className="text-lg font-semibold text-gray-800">Location Details</h3>
                   </div>
-                  
+
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">Address *</label>
                     <input
@@ -294,28 +313,26 @@ const CreateComplaint = ({ onClose }) => {
                       className="hidden"
                     />
                   </label>
-                  
+
                   {/* File previews with status */}
                   {files.length > 0 && (
                     <div className="mt-4 space-y-3">
                       {files.map((file, index) => (
                         <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                           <div className="flex items-center space-x-3">
-                            <div className={`p-2 rounded-md ${
-                              uploadingStatus[index] === 'Uploaded' ? 'bg-green-100 text-green-600' :
+                            <div className={`p-2 rounded-md ${uploadingStatus[index] === 'Uploaded' ? 'bg-green-100 text-green-600' :
                               uploadingStatus[index] === 'Failed' ? 'bg-red-100 text-red-600' :
-                              'bg-blue-100 text-blue-600'
-                            }`}>
+                                'bg-blue-100 text-blue-600'
+                              }`}>
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                               </svg>
                             </div>
                             <div>
                               <p className="text-sm font-medium text-gray-700 truncate max-w-xs">{file.name}</p>
-                              <p className={`text-xs ${
-                                uploadingStatus[index] === 'Uploaded' ? 'text-green-600' :
+                              <p className={`text-xs ${uploadingStatus[index] === 'Uploaded' ? 'text-green-600' :
                                 uploadingStatus[index] === 'Failed' ? 'text-red-600' : 'text-blue-600'
-                              }`}>
+                                }`}>
                                 {uploadingStatus[index]}
                               </p>
                             </div>
@@ -344,9 +361,8 @@ const CreateComplaint = ({ onClose }) => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className={`w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                    isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
-                  }`}
+                  className={`w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg shadow-md transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''
+                    }`}
                 >
                   {isSubmitting ? (
                     <span className="flex items-center justify-center">

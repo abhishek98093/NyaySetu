@@ -81,33 +81,57 @@ const createPoliceOfficer = async (req, res) => {
       pincode,
 
       // Police details
+      badge_number,
       station_name,
       station_code,
       station_address,
-      rank, // 'Inspector' or 'Sub-Inspector'
+      rank,
       shift_time,
       official_email,
       emergency_contact
     } = req.body;
+
+    // === Check for duplicates ===
     const emailCheck = await client.query(
-  `SELECT 1 FROM users WHERE email = $1 LIMIT 1`,
-  [email]
-);
+      `SELECT 1 FROM users WHERE email = $1 LIMIT 1`,
+      [email]
+    );
+    if (emailCheck.rowCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'A user already exists with this email.',
+      });
+    }
 
-if (emailCheck.rowCount > 0) {
-  return res.status(400).json({
-    success: false,
-    message: 'A user already exists with this email.',
-  });
-}
+    const numberCheck = await client.query(
+      `SELECT 1 FROM users WHERE phone_number = $1 LIMIT 1`,
+      [phone_number]
+    );
+    if (numberCheck.rowCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'A user already exists with this phone number.',
+      });
+    }
 
-    // ✅ Generate random 16-character password and hash it
+    const badgeCheck = await client.query(
+      `SELECT 1 FROM police_details WHERE badge_number = $1 LIMIT 1`,
+      [badge_number]
+    );
+    if (badgeCheck.rowCount > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'A police officer already exists with this badge number.',
+      });
+    }
+
+    // === Generate password ===
     const plainPassword = crypto.randomBytes(12).toString('base64').slice(0, 16);
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
     await client.query('BEGIN');
 
-    // Insert into users
+    // === Insert into users ===
     const userInsertQuery = `
       INSERT INTO users (
         name, dob, gender, phone_number, email, password,
@@ -122,46 +146,43 @@ if (emailCheck.rowCount > 0) {
       )
       RETURNING user_id
     `;
-
     const userValues = [
       name, dob, gender, phone_number, email, hashedPassword,
       aadhaar_number, true,
       profile_picture_url, true, 'verified',
       address_line1, address_line2, town, district, state, pincode
     ];
-
     const userResult = await client.query(userInsertQuery, userValues);
     const userId = userResult.rows[0].user_id;
 
-    // Insert into police_details
+    // === Insert into police_details ===
     const policeInsertQuery = `
       INSERT INTO police_details (
-        user_id, station_name, station_code, station_address,
+        user_id, badge_number, station_name, station_code, station_address,
         district, state, rank, shift_time,
         official_email, emergency_contact
       ) VALUES (
-        $1, $2, $3, $4,
-        $5, $6, $7, $8,
-        $9, $10
+        $1, $2, $3, $4, $5,
+        $6, $7, $8, $9,
+        $10, $11
       )
     `;
-
     const policeValues = [
-      userId, station_name, station_code, station_address,
+      userId, badge_number, station_name, station_code, station_address,
       district, state, rank, shift_time,
       official_email, emergency_contact
     ];
-
     await client.query(policeInsertQuery, policeValues);
+
     await client.query('COMMIT');
 
-    // ✅ Send credentials via email
+    // === Send Email ===
     try {
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
         to: email,
         subject: 'Your Police Portal Login Credentials',
-        html: policeWelcome({ email, plainPassword }),
+        html: policeWelcome(email, plainPassword),
       });
 
       return res.status(200).json({
@@ -190,4 +211,84 @@ if (emailCheck.rowCount > 0) {
   }
 };
 
-module.exports={fetchStats,createPoliceOfficer}
+
+// controllers/policeController.js
+const getFilteredPolice = async (req, res) => {
+  try {
+    const {
+      gender,
+      station_code,
+      badge_number,
+      rank,
+      pincode,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    let query = `
+  SELECT 
+    u.user_id,
+    u.name,
+    u.dob,
+    u.profile_picture_url,
+    p.badge_number,
+    p.station_name,
+    p.station_code,
+    p.rank,
+    p.official_email,
+    p.station_address,
+    p.police_id,
+    p.created_at
+  FROM users u
+  JOIN police_details p ON u.user_id = p.user_id
+  WHERE u.role = 'police'
+`;
+
+
+    const values = [];
+    let i = 1;
+
+    if (gender) {
+      query += ` AND u.gender = $${i++}`;
+      values.push(gender);
+    }
+
+    if (station_code) {
+      query += ` AND p.station_code ILIKE $${i++}`;
+      values.push(`%${station_code}%`);
+    }
+
+    if (badge_number) {
+      query += ` AND p.police_id = $${i++}`;
+      values.push(badge_number);
+    }
+
+    if (rank) {
+      query += ` AND p.rank ILIKE $${i++}`;
+      values.push(`%${rank}%`);
+    }
+
+    if (pincode) {
+      query += ` AND u.pincode = $${i++}`;
+      values.push(pincode);
+    }
+
+    // Pagination logic
+    const offset = (page - 1) * limit;
+    query += ` ORDER BY u.created_at DESC LIMIT $${i++} OFFSET $${i}`;
+    values.push(Number(limit), Number(offset));
+
+    const result = await pool.query(query, values);
+
+    res.status(200).json({
+      success: true,
+      police: result.rows,
+      total:result.rows.length
+    });
+  } catch (error) {
+    console.error("Error fetching police list:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+module.exports={fetchStats,createPoliceOfficer,getFilteredPolice}

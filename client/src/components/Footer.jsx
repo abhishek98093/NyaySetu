@@ -1,55 +1,57 @@
 import React from 'react';
+import logo from '../assets/Nyay-setu-logo.svg';
 
 const Footer = () => {
-    return (
-        <footer className="px-6 md:px-16 lg:px-24 xl:px-32 pt-8 w-full text-gray-500">
-            <div className="flex flex-col md:flex-row justify-between w-full gap-10 border-b border-gray-500/30 pb-6">
-                <div className="md:max-w-96">
-                    <img
-                        className="h-9"
-                        src="https://raw.githubusercontent.com/prebuiltui/prebuiltui/main/assets/dummyLogo/dummyLogoDark.svg"
-                        alt="Company Logo"
-                    />
-                    <p className="mt-6 text-sm">
-                        Our mission is to empower every citizen with a transparent, secure, and accessible platform to report crimes in real time. By bridging the gap between the community and law enforcement, we ensure that every voice is heard and every report is acted upon with integrity. From verified incident tracking to Aadhaar-based identification, our system is built with accountability and trust at its core. Stay informed, raise alerts, and join us in building a safer, more responsive society — one report at a time.
-                    </p>
-                </div>
+  return (
+    <footer className="bg-gray-100 border-t border-gray-300 text-gray-600 px-6 md:px-16 lg:px-24 xl:px-32 pt-10 w-full">
+      <div className="flex flex-col md:flex-row justify-between gap-12 pb-10 border-b border-gray-400/20">
+        {/* Logo & Description */}
+        <div className="md:max-w-md">
+          <img className="h-10 mb-4" src={logo} alt="Nyay Setu Logo" />
+          <p className="text-sm leading-relaxed text-gray-700">
+            Our mission is to empower every citizen with a transparent, secure, and accessible platform to report crimes in real time. By bridging the gap between the community and law enforcement, we ensure that every voice is heard and every report is acted upon with integrity.
+          </p>
+        </div>
 
-                <div className="flex-1 flex items-start md:justify-end gap-20">
-                    <div>
-                        <h2 className="font-semibold mb-5 text-gray-800">Company</h2>
-                        <ul className="text-sm space-y-2">
-                            <li><a href="#" className="hover:text-gray-800 transition-colors">Home</a></li>
-                            <li><a href="#" className="hover:text-gray-800 transition-colors">About us</a></li>
-                            <li><a href="#" className="hover:text-gray-800 transition-colors">Contact us</a></li>
-                            <li><a href="#" className="hover:text-gray-800 transition-colors">Privacy policy</a></li>
-                        </ul>
-                    </div>
+        {/* Navigation & Newsletter */}
+        <div className="flex flex-col md:flex-row gap-12">
+          {/* Links */}
+          <div>
+            <h2 className="font-semibold text-gray-800 mb-4">Quick Links</h2>
+            <ul className="space-y-2 text-sm">
+              <li><a href="#" className="hover:text-blue-600 transition">Home</a></li>
+              <li><a href="#" className="hover:text-blue-600 transition">About Us</a></li>
+              <li><a href="#" className="hover:text-blue-600 transition">Contact Us</a></li>
+              <li><a href="#" className="hover:text-blue-600 transition">Privacy Policy</a></li>
+            </ul>
+          </div>
 
-                    <div>
-                        <h2 className="font-semibold text-gray-800 mb-5">Subscribe to our newsletter</h2>
-                        <div className="text-sm space-y-2">
-                            <p>The latest news, articles, and resources, sent to your inbox weekly.</p>
-                            <div className="flex items-center gap-2 pt-4">
-                                <input
-                                    className="border border-gray-500/30 placeholder-gray-500 outline-none w-full max-w-64 h-9 rounded px-2 focus:border-blue-500 transition-colors"
-                                    type="email"
-                                    placeholder="Enter your email"
-                                />
-                                <button className="bg-blue-600 w-24 h-9 text-white rounded hover:bg-blue-700 transition-colors">
-                                    Subscribe
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <p className="pt-4 text-center text-xs md:text-sm pb-5">
-                Copyright 2025 © NYAY SETU. All Right Reserved.
+          {/* Newsletter */}
+          <div className="max-w-sm">
+            <h2 className="font-semibold text-gray-800 mb-4">Stay Updated</h2>
+            <p className="text-sm mb-4">
+              Get the latest updates and alerts delivered directly to your inbox.
             </p>
-        </footer>
-    );
+            <div className="flex items-center gap-2">
+              <input
+                className="border border-gray-300 rounded-md px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                type="email"
+                placeholder="Enter your email"
+              />
+              <button className="bg-blue-600 text-white px-4 py-2 text-sm rounded-md hover:bg-blue-700 transition">
+                Subscribe
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Note */}
+      <p className="text-center text-xs md:text-sm text-gray-500 mt-6 pb-6">
+        © 2025 Nyay Setu. All rights reserved.
+      </p>
+    </footer>
+  );
 };
 
 export default Footer;

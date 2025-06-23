@@ -52,7 +52,9 @@ const createTable = async () => {
     complaint_id SERIAL PRIMARY KEY,
 
     user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
-    assigned_police_id INT REFERENCES users(user_id) ON DELETE SET NULL,
+    
+    assigned_badge VARCHAR(20) REFERENCES police_details(badge_number) ON DELETE SET NULL,
+
 
     crime_type VARCHAR(50) NOT NULL CHECK (
         crime_type IN (
@@ -100,6 +102,7 @@ const createTable = async () => {
     CREATE TABLE IF NOT EXISTS police_details (
         police_id SERIAL PRIMARY KEY,
         user_id INT UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
+        badge_number VARCHAR(20) UNIQUE NOT NULL,
         must_reset_password BOOLEAN DEFAULT TRUE,
 
 

@@ -3,7 +3,7 @@ import logo from '../assets/Nyay-setu-logo.svg';
 import menuicon from '../assets/menu-icon.png';
 import closemenu from '../assets/close.png';
 import React from 'react';
-import useLogout from '../utils/useLogout';
+import useLogoutAdmin from '../utils/useLogoutAdmin';
 
 const PoliceNavbar = () => {
     const navLinks = [
@@ -19,7 +19,7 @@ const PoliceNavbar = () => {
 
     const [isScrolled, setIsScrolled] = React.useState(false);
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-    const logout=useLogout();
+    const logout=useLogoutAdmin();
     
     const handleLogout = () => {
         logout();

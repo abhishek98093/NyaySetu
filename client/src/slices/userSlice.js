@@ -11,16 +11,16 @@ const userSlice = createSlice({
   reducers: {
     setUser: (state, action) => {
       state.user = action.payload.user;
-      state.logedAt = Date.now(); // ✅ fix here
+      state.logedAt = Date.now();
     },
     updateUser: (state, action) => {
       state.user = action.payload.user;
-      state.logedAt = Date.now(); // ✅ fix here
+      state.logedAt = Date.now();
     },
+    resetUser: () => initialState, // ✅ clean reset
   },
 });
 
-// ✅ Corrected named exports
-export const { setUser, updateUser } = userSlice.actions;
+export const { setUser, updateUser, resetUser } = userSlice.actions;
 
 export default userSlice.reducer;

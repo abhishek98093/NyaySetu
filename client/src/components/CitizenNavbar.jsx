@@ -3,7 +3,7 @@ import logo from '../assets/Nyay-setu-logo.svg';
 import menuicon from '../assets/menu-icon.png';
 import closemenu from '../assets/close.png';
 import React from 'react';
-import useLogout from '../utils/useLogout';
+import useLogoutUser from '../utils/useLogoutUser';
 
 const CitizenNavbar = () => {
     const navLinks = [
@@ -11,7 +11,7 @@ const CitizenNavbar = () => {
         { name: 'Complaint Section', path: '/citizenComplaintPage' },
         { name: 'Missing Section', path: '/' },
         { name: 'Criminal Sighting', path: '/' },
-        { name: 'Info Section', path: '/' },
+        { name: 'Info Section', path: '/infopage' },
         { name: 'About', path: '/' }
     ];
 
@@ -19,8 +19,8 @@ const CitizenNavbar = () => {
 
     const [isScrolled, setIsScrolled] = React.useState(false);
     const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-    const logout=useLogout();
-    
+    const logout = useLogoutUser();
+
     const handleLogout = () => {
         logout();
     }
@@ -33,7 +33,7 @@ const CitizenNavbar = () => {
 
     return (
         <nav className={`fixed top-0 left-0 bg-indigo-500 w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${isScrolled ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" : "py-4 md:py-6"}`}>
-            
+
             {/* Logo */}
             <img
                 src={logo}
@@ -48,35 +48,34 @@ const CitizenNavbar = () => {
                     <button
                         key={i}
                         onClick={() => navigate(link.path)}
-                        className={`group flex flex-col gap-0.5 focus:outline-none ${isScrolled ? "text-gray-700" : "text-white"}`}
+                        className={`group flex items-center whitespace-nowrap gap-1 ml-4 px-4 py-2 rounded-md text-base transition-all duration-300 font-medium focus:outline-none
+  ${isScrolled ? "text-gray-700 hover:bg-gray-100 active:scale-95" : "text-white hover:bg-white/10 active:scale-95"}`}
+
+
                     >
                         {link.name}
                         <div className={`${isScrolled ? "bg-gray-700" : "bg-white"} h-0.5 w-0 group-hover:w-full transition-all duration-300`} />
                     </button>
                 ))}
-                <button
+                {/* <button
                     onClick={() => navigate('/citizendashboard')}
                     className={`border px-4 py-1 text-sm font-light rounded-full cursor-pointer ${isScrolled ? 'text-black' : 'text-white'} transition-all`}
                 >
                     Dashboard
-                </button>
+                </button> */}
             </div>
 
             {/* Desktop Right */}
-            <div className="hidden md:flex items-center gap-4">
-                <button
-                    onClick={() => navigate('/citizendashboard')}
-                    className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500"
-                >
-                    Profile
-                </button>
+            <div className="hidden md:flex items-center gap-3 ml-4">
+               
                 <button
                     onClick={handleLogout}
-                    className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500"
+                    className="bg-black text-white px-6 py-2 rounded-full transition-all duration-300 hover:bg-red-600 active:scale-95"
                 >
                     Logout
                 </button>
             </div>
+
 
             {/* Mobile Menu Button */}
             <div className="flex items-center gap-3 md:hidden">
@@ -107,7 +106,7 @@ const CitizenNavbar = () => {
                     </button>
                 ))}
 
-                <button
+                {/* <button
                     onClick={() => {
                         navigate('/citizendashboard');
                         setIsMenuOpen(false);
@@ -115,7 +114,7 @@ const CitizenNavbar = () => {
                     className="border px-4 py-1 text-sm font-light rounded-full cursor-pointer transition-all"
                 >
                     Dashboard
-                </button>
+                </button> */}
 
                 <button
                     onClick={() => {

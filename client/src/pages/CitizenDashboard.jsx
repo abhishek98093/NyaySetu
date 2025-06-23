@@ -3,7 +3,7 @@ import { Doughnut, Bar } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 Chart.register(...registerables);
 import ProfileCard from '../components/ProfileCard';
-import { getComplaint} from '../apicalls/citizenapi';
+import { getComplaint } from '../apicalls/citizenapi';
 import { getToken, getUserId } from '../utils/utils';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
@@ -14,56 +14,56 @@ import UserProfileCard from '../components/UserProfileCard';
 
 const CitizenDashboard = () => {
 
-  const dispatch=useDispatch();
+  const dispatch = useDispatch();
   const complaints = useSelector(state => state.complaints.complaints);
-    const user = useSelector(state => state.user.user);
-    const loadedAt=useSelector(state=>state.complaints.loadedAt);
+  const user = useSelector(state => state.user.user);
+  const loadedAt = useSelector(state => state.complaints.loadedAt);
   const [loading, setLoading] = useState(true);
   const [showProfile, setShowProfile] = useState(false);
 
- useEffect(() => {
-  const now = Date.now();
-  const shouldFetch = !loadedAt || now - loadedAt > 5 * 60 * 1000;
+  useEffect(() => {
+    const now = Date.now();
+    const shouldFetch = !loadedAt || now - loadedAt > 5 * 60 * 1000;
 
-  const fetchData = async () => {
-    if (shouldFetch) {
-      await getComplaint(dispatch); 
-    } else {
-      setLoading(false);
-    }
-  };
+    const fetchData = async () => {
+      if (shouldFetch) {
+        await getComplaint(dispatch);
+      } else {
+        setLoading(false);
+      }
+    };
 
-  fetchData(); 
+    fetchData();
 
-  const interval = setInterval(() => {
-    getComplaint(dispatch); 
-  }, 5 * 60 * 1000);
+    const interval = setInterval(() => {
+      getComplaint(dispatch);
+    }, 5 * 60 * 1000);
 
-  return () => clearInterval(interval); 
-}, [dispatch, loadedAt]);
+    return () => clearInterval(interval);
+  }, [dispatch, loadedAt]);
 
 
 
   const solvedCount = complaints.filter(c => c.status === 'resolved').length;
-const pendingCount = complaints.filter(c => c.status === 'pending').length;
-const progressCount = complaints.filter(c => c.status === 'in-progress').length;
-const rejectedCount = complaints.filter(c => c.status === 'rejected').length;
+  const pendingCount = complaints.filter(c => c.status === 'pending').length;
+  const progressCount = complaints.filter(c => c.status === 'in-progress').length;
+  const rejectedCount = complaints.filter(c => c.status === 'rejected').length;
 
-const solvedData = {
-  labels: ['Resolved', 'Pending', 'In-Progress', 'Rejected'],
-  datasets: [{
-    data: [solvedCount, pendingCount, progressCount, rejectedCount],
-    backgroundColor: ['#10B981', '#F59E0B', '#3B82F6', '#EF4444'], // green, yellow, blue, red
-  }]
-};
-const monthlyCounts = Array(12).fill(0);
-complaints.forEach(c => {
+  const solvedData = {
+    labels: ['Resolved', 'Pending', 'In-Progress', 'Rejected'],
+    datasets: [{
+      data: [solvedCount, pendingCount, progressCount, rejectedCount],
+      backgroundColor: ['#10B981', '#F59E0B', '#3B82F6', '#EF4444'], // green, yellow, blue, red
+    }]
+  };
+  const monthlyCounts = Array(12).fill(0);
+  complaints.forEach(c => {
     const date = new Date(c.created_at);
     const month = date.getMonth();
     monthlyCounts[month]++;
   });
 
- const activityData = {
+  const activityData = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
     datasets: [{
       label: 'Complaints Submitted',
@@ -93,7 +93,7 @@ complaints.forEach(c => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8 mt-3">
       {showProfile && (
         <ProfileCard
           onClose={() => setShowProfile(!showProfile)}
@@ -106,33 +106,40 @@ complaints.forEach(c => {
 
         <div className="flex flex-col lg:flex-row gap-6">
           <UserProfileCard
-          setShowProfile={setShowProfile} 
+            setShowProfile={setShowProfile}
           />
-          
+
 
           {/* Right Column - Stats (2/3) */}
           {/* Right Column - Stats (2/3) */}
           <div className="w-full lg:w-2/3 space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white p-4 rounded-xl shadow">
-                <h3 className="text-gray-500 text-sm font-medium">Problems Solved</h3>
-                <p className="text-2xl font-bold text-gray-800">142</p>
-                <p className="text-green-500 text-sm">+12% from last month</p>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Active Complaint */}
+              <div className="bg-yellow-50 p-4 rounded-xl shadow hover:shadow-md transition">
+                <h3 className="text-yellow-600 text-sm font-medium">Active Complaints</h3>
+                <p className="text-2xl font-bold text-yellow-800">{progressCount + pendingCount}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-xl shadow">
-                <h3 className="text-gray-500 text-sm font-medium">Active Cases</h3>
-                <p className="text-2xl font-bold text-gray-800">24</p>
-                <p className="text-yellow-500 text-sm">3 new today</p>
+              {/* Active Cases (In Progress) */}
+              <div className="bg-blue-50 p-4 rounded-xl shadow hover:shadow-md transition">
+                <h3 className="text-blue-600 text-sm font-medium">In Progress</h3>
+                <p className="text-2xl font-bold text-blue-800">{progressCount}</p>
               </div>
 
-              <div className="bg-white p-4 rounded-xl shadow">
-                <h3 className="text-gray-500 text-sm font-medium">Satisfaction</h3>
-                <p className="text-2xl font-bold text-gray-800">92%</p>
-                <p className="text-green-500 text-sm">Excellent</p>
+              {/* Resolved */}
+              <div className="bg-green-50 p-4 rounded-xl shadow hover:shadow-md transition">
+                <h3 className="text-green-600 text-sm font-medium">Resolved</h3>
+                <p className="text-2xl font-bold text-green-800">{solvedCount}</p>
+              </div>
+
+              {/* Rejected */}
+              <div className="bg-red-50 p-4 rounded-xl shadow hover:shadow-md transition">
+                <h3 className="text-red-600 text-sm font-medium">Rejected</h3>
+                <p className="text-2xl font-bold text-red-800">{rejectedCount}</p>
               </div>
             </div>
+
 
             {/* Charts Section */}
             <div className="bg-white p-6 rounded-xl shadow">

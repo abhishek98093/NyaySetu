@@ -40,6 +40,7 @@ export const signup = async (Formdata,dispatch) => {
         if (result.data.token) {
             localStorage.setItem("token", result.data.token);
             dispatch(setUser({user:result.data.user,logedAt:Date.now()}));
+            console.log('use updated');
             return {success:true};
         }
         return { success:false,message: result.data.message };

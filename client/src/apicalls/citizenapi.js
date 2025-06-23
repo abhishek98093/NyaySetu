@@ -40,6 +40,7 @@ export const submitVerification = async (formData,dispatch) => {
 export const getComplaint = async (dispatch) => {
   try {
     const token = localStorage.getItem("token");
+    if(!token) return;
 
     const response = await axios.get(
       `${API_BASE}/api/citizen/getComplaint`,
