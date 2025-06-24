@@ -192,6 +192,7 @@ export const changeOfficerRank = async (user_id, target_rank) => {
 };
 
 
+
 export const getPolicePersonnelAnalysis = async () => {
   try {
     const token = localStorage.getItem('token');
@@ -209,11 +210,12 @@ export const getPolicePersonnelAnalysis = async () => {
     });
 
     const data = response.data;
+    console.log(data.data);
 
     if (data.success && data.data) {
       return {
         success: true,
-        stats: data.data, 
+        data: data.data, // Keep consistent with backend response
       };
     } else {
       return { success: false, error: data.message || 'Unknown error' };

@@ -42,20 +42,20 @@ useEffect(() => {
       setError(null);
 
       const result = await getPolicePersonnelAnalysis();
+      console.log("API Response:", result); // Debug log
 
-      if (!result.success || !result.data) {
-        throw new Error('No data received from server');
+      if (!result.success || !result.data) {  // Changed from result.data to result.stats
+        throw new Error(result.error || 'No stats received from server');
       }
 
-      // Save to localStorage
       localStorage.setItem("personnelStats", JSON.stringify(result.data));
       localStorage.setItem("personnelStatsFetchedAt", Date.now().toString());
 
-      setPersonnelStats(result.data); // ✅ Correct way to set state
+      setPersonnelStats(result.data);  // Using result.stats instead of result.data
       personnelStatsFetchedAt.current = Date.now();
     } catch (err) {
       console.error("Failed to fetch stats:", err);
-      setError('Failed to load dashboard data. Please try again later.');
+      setError(err.message || 'Failed to load dashboard data. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -65,23 +65,25 @@ useEffect(() => {
   const cachedTime = localStorage.getItem("personnelStatsFetchedAt");
 
   if (cachedTime && now - parseInt(cachedTime, 10) < 5 * 60 * 1000) {
-    // Load from localStorage
-    const cachedData = localStorage.getItem("personnelStats");
-    const parsedData = cachedData ? JSON.parse(cachedData) : null;
+    try {
+      const cachedData = localStorage.getItem("personnelStats");
+      const parsedData = cachedData ? JSON.parse(cachedData) : null;
 
-    if (parsedData) {
-      setPersonnelStats(parsedData); // ✅ Correct way to restore cached data
+      if (parsedData) {
+        setPersonnelStats(parsedData);
+      }
+    } catch (e) {
+      console.error("Error parsing localStorage data", e);
     }
-
-    setLoading(false);
   } else {
-    fetchData(); // Fetch from API if cache is old or missing
+    fetchData();
   }
 
-  // Periodic refresh every 5 minutes
   const interval = setInterval(fetchData, 5 * 60 * 1000);
   return () => clearInterval(interval);
 }, []);
+
+
 
 
 
@@ -146,11 +148,9 @@ useEffect(() => {
     handleFetch()
   }
 
-    if(!isFilter){
-      return(
-        <AdminPersonnelStats personnelStats={personnelStats} />
-      )
-    }
+
+
+
 
   return (
     <div className="min-h-screen bg-gray-50 mt-7 ">
@@ -339,33 +339,44 @@ useEffect(() => {
           </div>
         </div>
       </div>
+      {!isFilter && Object.keys(personnelStats).length > 0 &&
+    <div className="mt-20 px-4"> {/* adjust mt as per navbar height */}
+      <AdminPersonnelStats data={personnelStats} />
+    </div>
+  
+}
 
       {/* Full Screen Personnel Grid */}
-      <div className="max-w-full px-4 sm:px-6 lg:px-8 py-6">
-        {policeList.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-4
-">
-            {policeList.map((officer, index) => (
-              <div key={officer.id || index} className="transform hover:scale-105 transition-transform duration-200">
-                <PersonnelCard policePersonal={officer} setPoliceList={setPoliceList} />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <Search className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-600 mb-2">No Personnel Found</h3>
-            <p className="text-gray-500 text-center max-w-md">
-              No police personnel match your current filters. Try adjusting your search criteria or clearing some
-              filters.
-            </p>
-
-
-          </div>
-        )}
+      <div className="max-w-full px-4 sm:px-6 lg:px-8 py-6 mt-20">
+  {policeList.length > 0 ? (
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-6">
+      {policeList.map((officer, index) => (
+        <div
+          key={officer.id || index}
+          className="transform hover:scale-[1.02] transition-transform duration-200"
+        >
+          <PersonnelCard
+            policePersonal={officer}
+            setPoliceList={setPoliceList}
+          />
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+        <Search className="w-8 h-8 text-gray-400" />
       </div>
+      <h3 className="text-lg font-medium text-gray-700 mb-2">
+        No Personnel Found
+      </h3>
+      <p className="text-gray-500 max-w-md">
+        No police personnel match your current filters. Try adjusting your search criteria or clearing some filters.
+      </p>
+    </div>
+  )}
+</div>
+
 
     </div>
   )
