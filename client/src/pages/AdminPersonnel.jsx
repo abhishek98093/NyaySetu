@@ -1,9 +1,14 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState,useRef } from "react"
 import { Search, Filter, ChevronLeft, ChevronRight } from "lucide-react"
 import PersonnelCard from "../components/PersonnelCard"
-import { fetchFilteredPolice } from "../apicalls/adminapi"
+import { fetchFilteredPolice,getPolicePersonnelAnalysis } from "../apicalls/adminapi"
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import AddPoliceOfficer from "../components/AddPoliceOfficer";
+import { toast } from "react-toastify";
+import AdminPersonnelStats from "../components/AdminPersonnelStats";
 
 const AdminPersonnel = () => {
+  const [addPolice, setAddPolice] = useState(false);
   const [policeList, setPoliceList] = useState([])
   const [filters, setFilters] = useState({
     rank: "",
@@ -12,23 +17,123 @@ const AdminPersonnel = () => {
     badge_number: "",
     station_code: "",
   })
-  const [loading,setLoading]=useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [page, setPage] = useState(1)
-  const [limit] = useState(12) 
+  const [limit] = useState(12)
   const [total, setTotal] = useState(0)
 
   const totalPages = Math.ceil(total / limit)
+  const [personnelStats, setPersonnelStats] = useState({
+  total_personnel: 0,
+  available_for_duty: 0,
+  rank_distribution: {},
+  status_distribution: {}
+});
+const[isFilter,setIsFilter]=useState(false);
+const [error, setError] = useState(null);
 
- const handleFetch = async () => {
-  setLoading(true);
-  const result = await fetchFilteredPolice({ filters, page, limit });
-  if (result.success) {
-    setPoliceList(result.police);
-    setTotal(result.total);
+const personnelStatsFetchedAt = useRef(null);
+
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const result = await getPolicePersonnelAnalysis();
+
+      if (!result.success || !result.data) {
+        throw new Error('No data received from server');
+      }
+
+      // Save to localStorage
+      localStorage.setItem("personnelStats", JSON.stringify(result.data));
+      localStorage.setItem("personnelStatsFetchedAt", Date.now().toString());
+
+      setPersonnelStats(result.data); // ✅ Correct way to set state
+      personnelStatsFetchedAt.current = Date.now();
+    } catch (err) {
+      console.error("Failed to fetch stats:", err);
+      setError('Failed to load dashboard data. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const now = Date.now();
+  const cachedTime = localStorage.getItem("personnelStatsFetchedAt");
+
+  if (cachedTime && now - parseInt(cachedTime, 10) < 5 * 60 * 1000) {
+    // Load from localStorage
+    const cachedData = localStorage.getItem("personnelStats");
+    const parsedData = cachedData ? JSON.parse(cachedData) : null;
+
+    if (parsedData) {
+      setPersonnelStats(parsedData); // ✅ Correct way to restore cached data
+    }
+
+    setLoading(false);
+  } else {
+    fetchData(); // Fetch from API if cache is old or missing
   }
-  setLoading(false);
+
+  // Periodic refresh every 5 minutes
+  const interval = setInterval(fetchData, 5 * 60 * 1000);
+  return () => clearInterval(interval);
+}, []);
+
+
+
+  const handleFetch = async () => {
+  try {
+    setLoading(true);
+    setIsFilter(true);
+    // Clean & validate filters before sending
+    const parsedFilters = {};
+    if (filters.gender && ['male', 'female', 'other'].includes(filters.gender.toLowerCase())) {
+      parsedFilters.gender = filters.gender.toLowerCase();
+    }
+
+    if (filters.rank && ['Inspector', 'Sub-Inspector'].includes(filters.rank)) {
+      parsedFilters.rank = filters.rank;
+    }
+
+    if (filters.pincode && /^\d{6}$/.test(filters.pincode)) {
+      parsedFilters.pincode = filters.pincode;
+    }
+
+    if (filters.badge_number && !isNaN(Number(filters.badge_number))) {
+      parsedFilters.badge_number = Number(filters.badge_number); // police_id in DB is integer
+    }
+
+    if (filters.station_code) {
+      parsedFilters.station_code = filters.station_code;
+    }
+
+    const result = await fetchFilteredPolice({
+      filters: parsedFilters,
+      page,
+      limit,
+    });
+
+    if (result?.success) {
+      setPoliceList(result.police);
+      setTotal(result.total);
+    } else {
+      toast.error(result?.message || 'Failed to fetch police data');
+      setIsFilter(false);
+    }
+
+  } catch (error) {
+    console.error('Error fetching police data:', error);
+    toast.error('An unexpected error occurred while fetching police list');
+    setIsFilter(false);
+  } finally {
+    setLoading(false);
+  }
 };
+
 
 
 
@@ -41,9 +146,32 @@ const AdminPersonnel = () => {
     handleFetch()
   }
 
+    if(!isFilter){
+      return(
+        <AdminPersonnelStats personnelStats={personnelStats} />
+      )
+    }
+
   return (
-    <div className="min-h-screen bg-gray-50 mt-7">
+    <div className="min-h-screen bg-gray-50 mt-7 ">
       {/* Header */}
+       {addPolice && (
+  <div className="fixed inset-0 z-50 bg-black/50 overflow-y-auto">
+    <div className="flex items-center justify-center min-h-screen px-4 py-10">
+      <AddPoliceOfficer onClose={() => setAddPolice(false) } setPoliceList={setPoliceList} />
+    </div>
+  </div>
+)}
+ 
+      {!addPolice && <button
+      onClick={()=>setAddPolice(true)}
+      className="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-lg z-50 flex items-center gap-2"
+      aria-label="Add Officer"
+    > 
+      <PersonAddIcon fontSize="small" />
+      Add Officer
+    </button>
+}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-full px-4 sm:px-6 lg:px-8 py-4">
           <h1 className="text-2xl font-bold text-gray-900">Police Personnel Management</h1>
@@ -109,78 +237,105 @@ const AdminPersonnel = () => {
             />
 
             <button
-  onClick={loading ? null : handleSearch}
-  disabled={loading}
-  className={`${
-    loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-  } text-white px-4 py-1.5 rounded-md font-medium transition-colors flex items-center gap-2 text-sm`}
+              onClick={loading ? null : handleSearch}
+              disabled={loading}
+              className={`${loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+                } text-white px-4 py-1.5 rounded-md font-medium transition-colors flex items-center gap-2 text-sm`}
+            >
+              {loading ? (
+                <div className="flex items-center gap-1 ">
+                  <svg
+                    className="animate-spin h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8z"
+                    ></path>
+                  </svg>
+                  Loading...
+                </div>
+              ) : (
+                <>
+                  <Search className="w-4 h-4" />
+                  Search
+                </>
+              )}
+            </button>
+            <button
+  type="button"
+  onClick={() => {
+    setFilters({
+      rank: "",
+      pincode: "",
+      gender: "",
+      badge_number: "",
+      station_code: "",
+    });
+    setPage(1);
+    setPoliceList([]); // optionally trigger a fetch here if needed
+    setIsFilter(false);
+  }}
+  className="bg-blue-700 hover:bg-blue-600 text-white px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2 text-sm"
 >
-  {loading ? (
-    <div className="flex items-center gap-1">
-      <svg
-        className="animate-spin h-4 w-4 text-white"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        ></circle>
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8v8z"
-        ></path>
-      </svg>
-      Loading...
-    </div>
-  ) : (
-    <>
-      <Search className="w-4 h-4" />
-      Search
-    </>
-  )}
+  Clear / Remove
 </button>
+
 
 
             {/* Pagination in same line */}
             <div className="flex items-center gap-3 ml-auto">
-              <span className="text-sm text-gray-600">
-                Page {page} of {totalPages} ({total} total)
-              </span>
+  <span className="text-sm text-gray-600">
+    Page {page} of {totalPages} ({total} total)
+  </span>
 
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={page === 1}
-                  className="p-1.5 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
+  <div className="flex items-center gap-1">
+    {/* Prev Button */}
+    <button
+      onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+      disabled={page <= 1}
+      className="p-1.5 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
+    >
+      <ChevronLeft className="w-4 h-4" />
+    </button>
 
-                <input
-                  type="number"
-                  value={page}
-                  onChange={(e) => setPage(Math.max(1, Math.min(Number.parseInt(e.target.value) || 1, totalPages)))}
-                  className="w-12 text-center text-sm border border-gray-300 rounded px-1 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                  min="1"
-                  max={totalPages}
-                />
+    {/* Page Input */}
+    <input
+      type="number"
+      value={page}
+      onChange={(e) => {
+        let newPage = parseInt(e.target.value);
+        if (isNaN(newPage) || newPage < 1) newPage = 1;
+        if (newPage > totalPages) newPage = totalPages;
+        setPage(newPage);
+      }}
+      className="w-12 text-center text-sm border border-gray-300 rounded px-1 py-1 focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+      min="1"
+      max={totalPages}
+    />
 
-                <button
-                  onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-                  disabled={page === totalPages}
-                  className="p-1.5 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+    {/* Next Button */}
+    <button
+      onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+      disabled={page >= totalPages}
+      className="p-1.5 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed"
+    >
+      <ChevronRight className="w-4 h-4" />
+    </button>
+  </div>
+</div>
+
           </div>
         </div>
       </div>
@@ -192,7 +347,7 @@ const AdminPersonnel = () => {
 ">
             {policeList.map((officer, index) => (
               <div key={officer.id || index} className="transform hover:scale-105 transition-transform duration-200">
-                <PersonnelCard policePersonal={officer} />
+                <PersonnelCard policePersonal={officer} setPoliceList={setPoliceList} />
               </div>
             ))}
           </div>
@@ -206,25 +361,12 @@ const AdminPersonnel = () => {
               No police personnel match your current filters. Try adjusting your search criteria or clearing some
               filters.
             </p>
-            <button
-              onClick={() => {
-                setFilters({
-                  rank: "",
-                  pincode: "",
-                  gender: "",
-                  badge_number: "",
-                  station_code: "",
-                })
-                setPage(1)
-                handleFetch()
-              }}
-              className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Clear all filters
-            </button>
+
+
           </div>
         )}
       </div>
+
     </div>
   )
 }

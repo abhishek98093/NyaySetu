@@ -1,6 +1,8 @@
 import axios from 'axios'
-const API_BASE = 'http://localhost:3000';
+// const API_BASE = 'http://localhost:3000';
 import {setUser} from '../slices/userSlice';
+const API_BASE = import.meta.env.VITE_API_BASE;
+
 
 export const sendOtp = async (email) => {
     const data = {

@@ -59,6 +59,7 @@ const submitVerification = async (req, res) => {
         message: "Aadhaar must start with digits 2-9",
       });
     }
+    
 
     // SQL UPDATE with RETURNING *
     const result = await pool.query(

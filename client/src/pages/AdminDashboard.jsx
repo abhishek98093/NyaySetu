@@ -21,69 +21,78 @@ const AdminDashboard = () => {
   const lastFetchedAt = useRef(null);
 
   useEffect(() => {
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const data = await fetchStats();
+        const data = await fetchStats();
 
-      if (!data) {
-        throw new Error('No data received from server');
+        if (!data) {
+          throw new Error('No data received from server');
+        }
+
+        // Save to localStorage
+        if (data.statusStats) {
+          localStorage.setItem("adminStatusStats", JSON.stringify(data.statusStats));
+        }
+        if (data.monthWiseStats) {
+          localStorage.setItem("adminMonthWiseStats", JSON.stringify(data.monthWiseStats));
+        }
+        localStorage.setItem("adminFetchedAt", Date.now().toString());
+
+        localStorage.setItem("adminFetchedAt", Date.now().toString());
+
+        setStats({
+          pending: data.statusStats?.pending || 0,
+          in_progress: data.statusStats?.in_progress || 0,
+          resolved: data.statusStats?.resolved || 0,
+          rejected: data.statusStats?.rejected || 0
+        });
+
+        setMonthStats(data.monthWiseStats || []);
+        lastFetchedAt.current = Date.now();
+
+      } catch (err) {
+        console.error("Failed to fetch stats:", err);
+        setError('Failed to load dashboard data. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const now = Date.now();
+    const cachedTime = localStorage.getItem("adminFetchedAt");
+
+    if (cachedTime && now - parseInt(cachedTime, 10) < 5 * 60 * 1000) {
+      // Load from localStorage
+      const statusDataRaw = localStorage.getItem("adminStatusStats");
+      const monthDataRaw = localStorage.getItem("adminMonthWiseStats");
+
+      const cachedStatus = statusDataRaw ? JSON.parse(statusDataRaw) : null;
+      const cachedMonth = monthDataRaw ? JSON.parse(monthDataRaw) : null;
+
+      if (cachedStatus) {
+        setStats({
+          pending: cachedStatus?.pending || 0,
+          in_progress: cachedStatus?.in_progress || 0,
+          resolved: cachedStatus?.resolved || 0,
+          rejected: cachedStatus?.rejected || 0
+        });
       }
 
-      // Save to localStorage
-      localStorage.setItem("adminStatusStats", JSON.stringify(data.statusStats));
-      localStorage.setItem("adminMonthWiseStats", JSON.stringify(data.monthWiseStats));
-      localStorage.setItem("adminFetchedAt", Date.now().toString());
+      if (cachedMonth) {
+        setMonthStats(cachedMonth);
+      }
 
-      setStats({
-        pending: data.statusStats?.pending || 0,
-        in_progress: data.statusStats?.in_progress || 0,
-        resolved: data.statusStats?.resolved || 0,
-        rejected: data.statusStats?.rejected || 0
-      });
-
-      setMonthStats(data.monthWiseStats || []);
-      lastFetchedAt.current = Date.now();
-
-    } catch (err) {
-      console.error("Failed to fetch stats:", err);
-      setError('Failed to load dashboard data. Please try again later.');
-    } finally {
       setLoading(false);
-    }
-  };
-
-  const now = Date.now();
-  const cachedTime = localStorage.getItem("adminFetchedAt");
-
-  if (cachedTime && now - parseInt(cachedTime, 10) < 5 * 60 * 1000) {
-    // Load from localStorage
-    const cachedStatus = JSON.parse(localStorage.getItem("adminStatusStats"));
-    const cachedMonth = JSON.parse(localStorage.getItem("adminMonthWiseStats"));
-
-    if (cachedStatus) {
-      setStats({
-        pending: cachedStatus?.pending || 0,
-        in_progress: cachedStatus?.in_progress || 0,
-        resolved: cachedStatus?.resolved || 0,
-        rejected: cachedStatus?.rejected || 0
-      });
+    } else {
+      fetchData();
     }
 
-    if (cachedMonth) {
-      setMonthStats(cachedMonth);
-    }
-
-    setLoading(false);
-  } else {
-    fetchData();
-  }
-
-  const interval = setInterval(fetchData, 5 * 60 * 1000);
-  return () => clearInterval(interval);
-}, []);
+    const interval = setInterval(fetchData, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const solvedData = {
     labels: ['Pending', 'In-Progress', 'Resolved', 'Rejected'],
@@ -188,8 +197,8 @@ const AdminDashboard = () => {
                   {Number(stats.pending) + Number(stats.in_progress)}
                 </p>
                 <p className={`text-sm ${Number(monthlyCounts[currentMonth]) - Number(monthlyCounts[lastMonth]) >= 0
-                    ? 'text-green-500'
-                    : 'text-red-500'
+                  ? 'text-green-500'
+                  : 'text-red-500'
                   }`}>
                   {Number(monthlyCounts[currentMonth]) - Number(monthlyCounts[lastMonth]) > 0
                     ? `+${Number(monthlyCounts[currentMonth]) - Number(monthlyCounts[lastMonth])} more cases than last month`

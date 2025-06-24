@@ -1,7 +1,10 @@
-import React from "react";
+import { useState } from "react";
 import { Mail, Shield, MapPin, Calendar, User, Barcode, Badge, Hash } from "lucide-react";
+import DeleteIcon from '@mui/icons-material/Delete';
+import { deletePoliceOfficer, changeOfficerRank } from "../apicalls/adminapi";
 
-const PersonnelCard = ({ policePersonal }) => {
+const PersonnelCard = ({ policePersonal, setPoliceList }) => {
+  const [loading, setLoading] = useState(false);
   const {
     name,
     rank,
@@ -15,20 +18,67 @@ const PersonnelCard = ({ policePersonal }) => {
     profile_picture_url,
   } = policePersonal;
 
- const calculateAge = (dob) => {
-  const today = new Date();
-  const birthDate = new Date(dob);
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
-  }
-  return age;
-};
-const onlyDate = new Date(created_at).toISOString().split("T")[0]; // "2025-06-23"
+  const calculateAge = (dob) => {
+    const today = new Date();
+    const birthDate = new Date(dob);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+  const onlyDate = new Date(created_at).toISOString().split("T")[0]; // "2025-06-23"
 
-const age = calculateAge(dob);
-const yearsOfService=calculateAge(onlyDate);
+  const age = calculateAge(dob);
+  const yearsOfService = calculateAge(onlyDate);
+  const UserId = policePersonal.user_id;
+
+  const handleDelete = async () => {
+    setLoading(true);
+
+    try {
+      await deletePoliceOfficer(UserId);
+      setPoliceList((prevList) => prevList.filter(officer => officer.user_id !== UserId));
+
+    } catch (error) {
+      // Optional: Log error if needed
+      console.error("Delete error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRankChange = async (user_id, newRank) => {
+
+    setLoading(true);
+
+    try {
+
+
+      const result = await changeOfficerRank(user_id, newRank);
+
+      if (result.success) {
+        setPoliceList((prevList) =>
+          prevList.map((officer) =>
+            officer.user_id === user_id
+              ? { ...officer, rank: newRank }
+              : officer
+          )
+        );
+      } else {
+        // toast.error("Promotion failed.");
+      }
+    } catch (error) {
+      console.error("Promote error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+
+
 
 
 
@@ -42,8 +92,8 @@ const yearsOfService=calculateAge(onlyDate);
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-300 flex-shrink-0 overflow-hidden">
             {profile_picture_url ? (
-              <img 
-                src={profile_picture_url} 
+              <img
+                src={profile_picture_url}
                 alt={name}
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -136,6 +186,40 @@ const yearsOfService=calculateAge(onlyDate);
           </div>
         </div>
       </div>
+      <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Promote/Demote Button Card */}
+        <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 flex justify-center items-center h-24">
+          {policePersonal.rank === "Inspector" && (
+            <button
+              onClick={() => handleRankChange(policePersonal.user_id, "Sub-Inspector")}
+              className="text-s px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-20"
+            >
+              Demote
+            </button>
+          )}
+
+          {policePersonal.rank === "Sub-Inspector" && (
+            <button
+              onClick={() => handleRankChange(policePersonal.user_id, "Inspector")}
+              className="btext-xs px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
+            >
+              Promote
+            </button>
+          )}
+        </div>
+
+
+
+        {/* Delete Record Button Card */}
+        <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-slate-200/50 flex justify-center items-center h-24">
+          <button onClick={() => handleDelete()} className="text-xs px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2">
+            <DeleteIcon fontSize="small" />
+            Delete Record
+          </button>
+        </div>
+      </div>
+
+
 
       {/* Decorative Bubbles */}
       <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-blue-200/20 to-indigo-200/20 rounded-full blur-xl"></div>

@@ -1,6 +1,8 @@
 // api.js
 import axios from "axios";
-const API_BASE = "http://localhost:3000"; // or your API URL
+// const API_BASE = "http://localhost:3000"; // or your API URL
+const API_BASE = import.meta.env.VITE_API_BASE;
+
 import { toast } from "react-toastify";
 import { addComplaint, setComplaints } from "../slices/complaintSlice";
 import { set } from "zod";
