@@ -91,6 +91,7 @@ const createTable = async () => {
 
     crime_datetime TIMESTAMP,
     proof_urls TEXT[],
+    case_file_url TEXT DEFAULT NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

@@ -9,7 +9,7 @@ const AdminNavbar = () => {
     const navLinks = [
         { name: 'Home', path: '/' },
         { name: 'Personnel Management', path: '/personnelpage' },
-        { name: 'Performance analyser', path: '/' },
+        { name: 'Performance analyser', path: '/personnelperformance' },
         { name: 'Report', path: '/' },
         { name: 'Info Section', path: '/' },
         { name: 'About', path: '/' }

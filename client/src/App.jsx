@@ -12,6 +12,7 @@ import HomeRedirect from './components/HomeRedirect';
 import CitizenComplaintPage from './pages/CitizenComplaintPage';
 import InfoPage from './pages/InfoPage';
 import AdminPersonnel from './pages/AdminPersonnel';
+import AdminPerformenceAnalyse from './pages/AdminPerformenceAnalyse';
 const App=()=>{
   return (
     <div>
@@ -28,6 +29,7 @@ const App=()=>{
             <Route path='/citizenComplaintPage' element={<CitizenComplaintPage />} />
             <Route path='/infopage' element={<InfoPage />} />
             <Route path='/personnelpage' element={<AdminPersonnel />} />
+            <Route path='/personnelperformance' element={<AdminPerformenceAnalyse />} />
           </Routes>
       </div>
       <Footer />
