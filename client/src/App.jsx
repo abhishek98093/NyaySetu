@@ -1,7 +1,9 @@
 import React from 'react';
 import Navbar from './components/Navbar';
-import Footer from './components/Footer'
-import {Route,Routes,} from 'react-router-dom';
+import Footer from './components/Footer';
+import { Route, Routes } from 'react-router-dom';
+
+// Pages
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -13,27 +15,37 @@ import CitizenComplaintPage from './pages/CitizenComplaintPage';
 import InfoPage from './pages/InfoPage';
 import AdminPersonnel from './pages/AdminPersonnel';
 import AdminPerformenceAnalyse from './pages/AdminPerformenceAnalyse';
-const App=()=>{
+
+// ✅ Import TokenExpiryChecker
+import TokenExpiryChecker from './components/TokenExpiryChecker';
+
+const App = () => {
   return (
     <div>
+      {/* ✅ Periodic token validity checker */}
+      <TokenExpiryChecker />
+
       <Navbar />
+
       <div className='min-h-70vh'>
-          <Routes>
-            <Route path='/' element={<HomeRedirect />} />
-            <Route path='/landingpage' element={<HomePage />}/>
-            <Route path='/login' element={<LoginPage />} />
-            <Route path='/signup' element={<SignupPage />} />
-            <Route path='/citizendashboard' element={<CitizenDashboard />} />
-            <Route path='/policedashboard' element={<PoliceDashboard />} />
-            <Route path='/admindashboard' element={<AdminDashboard />} />
-            <Route path='/citizenComplaintPage' element={<CitizenComplaintPage />} />
-            <Route path='/infopage' element={<InfoPage />} />
-            <Route path='/personnelpage' element={<AdminPersonnel />} />
-            <Route path='/personnelperformance' element={<AdminPerformenceAnalyse />} />
-          </Routes>
+        <Routes>
+          <Route path='/' element={<HomeRedirect />} />
+          <Route path='/landingpage' element={<HomePage />} />
+          <Route path='/login' element={<LoginPage />} />
+          <Route path='/signup' element={<SignupPage />} />
+          <Route path='/citizendashboard' element={<CitizenDashboard />} />
+          <Route path='/policedashboard' element={<PoliceDashboard />} />
+          <Route path='/admindashboard' element={<AdminDashboard />} />
+          <Route path='/citizenComplaintPage' element={<CitizenComplaintPage />} />
+          <Route path='/infopage' element={<InfoPage />} />
+          <Route path='/personnelpage' element={<AdminPersonnel />} />
+          <Route path='/personnelperformance' element={<AdminPerformenceAnalyse />} />
+        </Routes>
       </div>
+
       <Footer />
     </div>
-  )
-}
+  );
+};
+
 export default App;

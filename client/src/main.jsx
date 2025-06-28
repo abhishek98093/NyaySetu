@@ -1,4 +1,4 @@
-// main.jsx or index.js (your entry file)
+// main.jsx or index.js
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
@@ -12,13 +12,19 @@ import { store } from './store/store';            // ✅ Your Redux store
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'; // ✅ React Query
+
+const queryClient = new QueryClient(); // 🔑 Create QueryClient instance
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Provider store={store}>                      {/* ✅ Wrap entire app in Redux */}
-      <Router>
-        <App />
-        <ToastContainer />
-      </Router>
+      <QueryClientProvider client={queryClient}>  {/* ✅ React Query provider */}
+        <Router>
+          <App />
+          <ToastContainer />
+        </Router>
+      </QueryClientProvider>
     </Provider>
   </StrictMode>
 );

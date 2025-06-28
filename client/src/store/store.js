@@ -11,19 +11,17 @@ import {
 } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // Uses localStorage
 
-import complaintReducer from '../slices/complaintSlice';
 import userReducer from '../slices/userSlice'; // ✅ Semicolon added
 
 // Redux Persist config
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['complaints', 'user'],
+  whitelist: [ 'user'],
 };
 
 // Combine all reducers
 const rootReducer = combineReducers({
-  complaints: complaintReducer,
   user: userReducer,
 });
 
