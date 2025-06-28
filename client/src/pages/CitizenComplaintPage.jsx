@@ -4,11 +4,38 @@ import AddCommentIcon from '@mui/icons-material/AddComment';
 import { Button } from "@mui/material";
 import CreateComplaint from '../components/CreateComplaint';
 import { toast } from 'react-toastify';
+import { useQuery } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
+import { getComplaint } from '../apicalls/citizenapi';
 
 const CitizenComplaintPage = () => {
-   const complaints = useSelector(state => state.complaints.complaints);
-  const [loading, setLoading] = useState(false);
+  const user = useSelector(state => state.user.user);
+  const {
+    data: complaintList=[],
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery({
+    queryKey: ['complaints', user?.user_id],
+    queryFn: () => getComplaint(dispatch), // 🔑 fetch function
+    staleTime: 5 * 60 * 1000, // ✅ data remains fresh for 5 minutes
+    cacheTime: 30 * 60 * 1000, // ✅ unused data stays in cache for 30 minutes
+    refetchOnWindowFocus: false, // ✅ disable auto refetch on tab focus
+    refetchOnReconnect: false,   // ✅ disable on reconnect
+    refetchInterval: 5 * 60 * 1000, // ✅ auto refetch every 5 minutes
+    retry: (failureCount, error) => {
+      const isNetworkError = !error.response;
+      const isServerError = error.response?.status >= 500;
+      return (isNetworkError || isServerError) && failureCount < 2; // ✅ max 2 retries for network/server errors
+    },
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 5000), // ✅ exponential backoff capped at 5s
+    onError: (error) => {
+      toast.error(error.message || "Failed to load complaints");
+      queryClient.invalidateQueries(['complaints', user?.user_id]);
+    }
+  });
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [newComplaint, setNewComplaint] = useState(false);
@@ -20,11 +47,11 @@ const CitizenComplaintPage = () => {
   const onClose = () => {
     setNewComplaint(!newComplaint);
   };
+  
 
 
 
-  const filteredComplaints = complaints.filter(complaint => {
-    // Normalize status for comparison
+  const filteredComplaints = complaintList.filter(complaint => {
     const normalizedStatus = complaint.status.toLowerCase().replace('-', ' ');
     const normalizedTab = activeTab.toLowerCase().replace('-', ' ');
     
@@ -35,7 +62,7 @@ const CitizenComplaintPage = () => {
   });
 
   // Status counts for filter tabs - using normalized statuses
-  const statusCounts = complaints.reduce((acc, complaint) => {
+  const statusCounts = complaintList.reduce((acc, complaint) => {
     const normalizedStatus = complaint.status.toLowerCase().replace('-', ' ');
     acc[normalizedStatus] = (acc[normalizedStatus] || 0) + 1;
     acc.all = (acc.all || 0) + 1;
@@ -112,7 +139,7 @@ const CitizenComplaintPage = () => {
             </div>
           </div>
 
-          {loading ? (
+          {isLoading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             </div>

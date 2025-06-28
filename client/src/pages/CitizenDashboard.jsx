@@ -1,53 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Doughnut, Bar } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
-Chart.register(...registerables);
-import ProfileCard from '../components/ProfileCard';
-import { getComplaint } from '../apicalls/citizenapi';
-import { getToken, getUserId } from '../utils/utils';
+import { useQuery } from '@tanstack/react-query';
+import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-import { useSelector } from 'react-redux';
-import { setUser } from '../slices/userSlice';
-import { useDispatch } from 'react-redux';
-import UserProfileCard from '../components/UserProfileCard';
 
+import { getComplaint } from '../apicalls/citizenapi';
+import ProfileCard from '../components/ProfileCard';
+import UserProfileCard from '../components/UserProfileCard';
+import LoadingPage from '../components/LoadingPage';
+import ErrorPage from '../components/ErrorPage';
+
+Chart.register(...registerables);
 
 const CitizenDashboard = () => {
-
   const dispatch = useDispatch();
-  const complaints = useSelector(state => state.complaints.complaints);
   const user = useSelector(state => state.user.user);
-  const loadedAt = useSelector(state => state.complaints.loadedAt);
-  const [loading, setLoading] = useState(true);
+
   const [showProfile, setShowProfile] = useState(false);
 
-  useEffect(() => {
-    const now = Date.now();
-    const shouldFetch = !loadedAt || now - loadedAt > 5 * 60 * 1000;
+  const {
+    data: complaintList = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isFetching,
+  } = useQuery({
+    queryKey: ['complaints', user?.user_id],
+    queryFn: () => getComplaint(dispatch), // 🔑 fetch function
+    staleTime: 5 * 60 * 1000, // ✅ data remains fresh for 5 minutes
+    cacheTime: 30 * 60 * 1000, // ✅ unused data stays in cache for 30 minutes
+    refetchOnWindowFocus: false, // ✅ disable auto refetch on tab focus
+    refetchOnReconnect: false,   // ✅ disable on reconnect
+    refetchInterval: 5 * 60 * 1000, // ✅ auto refetch every 5 minutes
+    retry: (failureCount, error) => {
+      const isNetworkError = !error.response;
+      const isServerError = error.response?.status >= 500;
+      return (isNetworkError || isServerError) && failureCount < 2; // ✅ max 2 retries for network/server errors
+    },
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 5000), // ✅ exponential backoff capped at 5s
+    onError: (error) => {
+      toast.error(error.message || "Failed to load complaints");
+      queryClient.invalidateQueries(['complaints', user?.user_id]);
+    }
+  });
 
-    const fetchData = async () => {
-      if (shouldFetch) {
-        await getComplaint(dispatch);
-      } else {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-
-    const interval = setInterval(() => {
-      getComplaint(dispatch);
-    }, 5 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, [dispatch, loadedAt]);
 
 
-
-  const solvedCount = complaints.filter(c => c.status === 'resolved').length;
-  const pendingCount = complaints.filter(c => c.status === 'pending').length;
-  const progressCount = complaints.filter(c => c.status === 'in-progress').length;
-  const rejectedCount = complaints.filter(c => c.status === 'rejected').length;
+  const solvedCount = complaintList.filter(c => c.status === 'resolved').length;
+  const pendingCount = complaintList.filter(c => c.status === 'pending').length;
+  const progressCount = complaintList.filter(c => c.status === 'in-progress').length;
+  const rejectedCount = complaintList.filter(c => c.status === 'rejected').length;
 
   const solvedData = {
     labels: ['Resolved', 'Pending', 'In-Progress', 'Rejected'],
@@ -57,7 +61,7 @@ const CitizenDashboard = () => {
     }]
   };
   const monthlyCounts = Array(12).fill(0);
-  complaints.forEach(c => {
+  complaintList.forEach(c => {
     const date = new Date(c.created_at);
     const month = date.getMonth();
     monthlyCounts[month]++;
@@ -72,14 +76,12 @@ const CitizenDashboard = () => {
     }]
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-4 md:p-8 flex items-center justify-center">
-        <div className="text-center">
-          <p>Loading dashboard...</p>
-        </div>
-      </div>
-    );
+   if (isLoading || isFetching) {
+    return <LoadingPage />;
+  }
+
+  if (isError) {
+    return <ErrorPage />
   }
 
   if (!user) {
