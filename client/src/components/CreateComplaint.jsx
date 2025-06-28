@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { toast } from 'react-toastify';
 import { submitComplaint } from '../apicalls/citizenapi';
-import { useDispatch } from 'react-redux';
 import { crimeTypes } from '../safe/safe';
+import { useSelector } from 'react-redux';
+import LoadingPage from './LoadingPage';
 
 const CreateComplaint = ({ onClose }) => {
-  const dispatch = useDispatch();
+  const user = useSelector(state => state.user.user); 
+  const queryClient = useQueryClient();
 
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [uploadingStatus, setUploadingStatus] = useState([]);
@@ -25,6 +28,35 @@ const CreateComplaint = ({ onClose }) => {
     pincode: '',
     crime_datetime: '',
   });
+
+  // ✅ Mutation for complaint submission
+  const complaintMutation = useMutation({
+  mutationFn: (payload) => submitComplaint(payload),
+
+  onSuccess: (newComplaint) => {
+    toast.success('Complaint submitted!');
+
+    // ✅ Update cache directly for ['complaints', user?.user_id]
+    queryClient.setQueryData(['complaints', user?.user_id], old => {
+      if (!old) return [newComplaint];
+      return [newComplaint, ...old];
+
+    });
+
+    onClose(); // close modal or reset form
+  },
+
+  onError: (error) => {
+    toast.error(error.message || 'Submission failed');
+  },
+
+  onSettled: () => {
+    setIsSubmitting(false);
+  },
+});
+
+
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -67,14 +99,16 @@ const CreateComplaint = ({ onClose }) => {
       }
     }
   };
-
+  if (complaintMutation.isPending) {
+    return <LoadingPage status="load" message="Adding complaint, please avoid pressing any key" />;
+  }
   const handleRemoveFile = (index) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
     setUploadingStatus((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
@@ -103,15 +137,7 @@ const CreateComplaint = ({ onClose }) => {
     };
 
     console.log('Ready to submit complaint:', payload);
-    const result = await submitComplaint(payload, dispatch);
-
-    if (result.success) {
-      toast.success('Complaint submitted!');
-      onClose(); // close modal or reset
-    } else {
-      toast.error(result.error || 'Submission failed');
-    }
-    setIsSubmitting(false);
+    complaintMutation.mutate(payload);
   };
 
   return (

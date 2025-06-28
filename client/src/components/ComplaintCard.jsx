@@ -1,10 +1,13 @@
 import {useState} from 'react';
 import ViewFullComplaint from './ViewFullComplaint';
+import ComplaintDelete from './ComplaintDelete';
 
 
 const ComplaintCard = ({ complaint }) => {
   // Normalize status to match config keys
   const [viewFull, setViewFull]=useState(false);
+  
+    const [newDelete,setDelete]=useState(false);
   
   const normalizedStatus = complaint.status
     .toLowerCase()
@@ -57,6 +60,12 @@ const ComplaintCard = ({ complaint }) => {
         <ViewFullComplaint
           complaint={complaint}
           setViewFull={setViewFull}
+        />
+      )}
+      {newDelete && (
+        <ComplaintDelete
+          complaint={complaint}
+          setDelete={setDelete}
         />
       )}
       <div className="p-5">
@@ -114,7 +123,7 @@ const ComplaintCard = ({ complaint }) => {
             </button>
             
             {complaint.status === 'pending' && ( // Changed to lowercase to match DB
-              <button className="px-4 py-2 bg-white hover:bg-gray-50 text-red-600 border border-red-300 text-sm font-medium rounded-md shadow-sm transition-colors flex items-center gap-1">
+              <button onClick={()=> setDelete((prev)=>!prev)}className="px-4 py-2 bg-white hover:bg-gray-50 text-red-600 border border-red-300 text-sm font-medium rounded-md shadow-sm transition-colors flex items-center gap-1">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
