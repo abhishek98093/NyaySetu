@@ -230,8 +230,34 @@ const getComplaint = async (req, res) => {
 };
 
 
+const deleteComplaint = async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user?.user_id; // assuming user_id is attached to req.user by your auth middleware
+
+  if (!userId) {
+    return res.status(401).json({ success: false, message: 'Unauthorized: User not authenticated' });
+  }
+
+  try {
+    // Check if the complaint exists and belongs to this user
+    const result = await pool.query(
+      'DELETE FROM complaints WHERE complaint_id = $1 AND user_id = $2 RETURNING *',
+      [id, userId]
+    );
+
+    if (result.rowCount > 0) {
+      res.status(200).json({ success: true, message: 'Complaint deleted successfully' });
+    } else {
+      res.status(404).json({ success: false, message: 'Complaint not found or you do not have permission to delete this complaint' });
+    }
+  } catch (error) {
+    console.error('Error deleting complaint:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+};
 
 
 
 
-module.exports={submitVerification,submitComplaint,getComplaint}
+
+module.exports={submitVerification,submitComplaint,getComplaint,deleteComplaint}
