@@ -1,6 +1,5 @@
 import api from "../utils/axiosInstance";
 import { toast } from "react-toastify";
-import { addComplaint, setComplaints } from "../slices/complaintSlice";
 import { setUser } from "../slices/userSlice";
 
 // ✅ 1. Submit Verification
@@ -25,61 +24,34 @@ export const submitVerification = async (formData, dispatch) => {
   }
 };
 
-// ✅ 2. Get Complaint
-export const getComplaint = async (dispatch) => {
-  try {
-    const response = await api.get("/citizen/getComplaint");
-
-    if (response.data.success) {
-      dispatch(
-        setComplaints({
-          complaints: response.data.complaints,
-          loadedAt: Date.now(),
-        })
-      );
-      toast.success(response.data.message || "Fetched successfully!");
-      return { success: true };
-    } else {
-      toast.error(response.data.message || "Failed to fetch.");
-      return { success: false };
-    }
-  } catch (error) {
-    console.error("Error fetching complaints:", error);
-    toast.error(error.message || "Server error while fetching complaints.");
-    return { success: false };
-  }
+export const getComplaint = async () => {
+  const res = await api.get('/citizen/getComplaint');
+  if (!res.data.success) throw new Error(res.data.message);
+  return res.data.complaints; // Only return actual data
 };
+
 
 // ✅ 3. Submit Complaint
-export const submitComplaint = async (complaintData, dispatch) => {
-  try {
-    const response = await api.post(
-      "/citizen/submitComplaint",
-      complaintData
-    );
+export const submitComplaint = async (payload) => {
+  const response = await api.post('/citizen/submitComplaint', payload);
 
-    toast.success("Complaint submitted successfully!");
-    dispatch(
-      addComplaint({
-        complaint: response.data.complaint,
-        loadedAt: Date.now(),
-      })
-    );
-
-    return { success: true };
-  } catch (error) {
-    console.error("❌ Submit complaint error:", error);
-
-    const message =
-      error.response?.data?.message ||
-      "Server error while submitting complaint.";
-
-    toast.error(message);
-    return { success: false };
+  if (response.data.success) {
+    return response.data.complaint; // ✅ return the new complaint object directly
+  } else {
+    throw new Error(response.data.message || 'Submission failed');
   }
 };
 
 
+export const deleteComplaint = async (id) => {
+  try {
+    const response = await api.delete(`/citizen/deleteComplaint/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error('Delete complaint error:', error);
+    throw error.response?.data || { message: 'Server error' };
+  }
+};
 
 
 
