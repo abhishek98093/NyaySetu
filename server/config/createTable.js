@@ -110,6 +110,7 @@ const createTable = async () => {
         -- Station Info
         station_name VARCHAR(255),
         station_code VARCHAR(50),
+        station_pincode VARCHAR(10),
         station_address TEXT,
         district VARCHAR(100),
         state VARCHAR(100),

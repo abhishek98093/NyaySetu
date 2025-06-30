@@ -164,14 +164,25 @@ const signup = async (req, res) => {
 
     const { password: _, ...safeUser } = user;
 
-    const token = generateToken(safeUser); 
+    // Generate token
+    const token = generateToken(safeUser);
 
-   
+    // If user is police, fetch police_details
+    let policeDetails = null;
+    if (user.role === 'police') {
+      const policeResult = await pool.query(
+        'SELECT * FROM police_details WHERE user_id = $1',
+        [user.user_id]
+      );
+      policeDetails = policeResult.rows[0] || null;
+    }
+
     return res.status(200).json({
       success: true,
       message: 'Login successful',
-      token:token,
+      token: token,
       user: safeUser,
+      policeDetails: policeDetails, // returns null if not police
     });
 
   } catch (err) {
@@ -183,6 +194,7 @@ const signup = async (req, res) => {
     });
   }
 };
+
 
 
 const resetPassword = async (req, res) => {

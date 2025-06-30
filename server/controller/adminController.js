@@ -83,12 +83,18 @@ const createPoliceOfficer = async (req, res) => {
       station_name,
       station_code,
       station_address,
+      station_pincode, // ✅ new field
       rank,
       shift_time,
       official_email,
       emergency_contact
     } = req.body;
-
+    if (!/^\d{12}$/.test(aadhaar_number)) {
+  return res.status(400).json({
+    success: false,
+    message: 'Invalid Aadhaar number. It must be exactly 12 digits.'
+  });
+}
     // === Duplicate Checks ===
     const emailCheck = await client.query(`SELECT 1 FROM users WHERE email = $1`, [email]);
     if (emailCheck.rowCount > 0) return res.status(400).json({ success: false, message: 'A user already exists with this email.' });
@@ -99,12 +105,13 @@ const createPoliceOfficer = async (req, res) => {
     const badgeCheck = await client.query(`SELECT 1 FROM police_details WHERE badge_number = $1`, [badge_number]);
     if (badgeCheck.rowCount > 0) return res.status(400).json({ success: false, message: 'A police officer already exists with this badge number.' });
 
+    // === Generate Random Password ===
     const plainPassword = crypto.randomBytes(12).toString('base64').slice(0, 16);
     const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
     await client.query('BEGIN');
 
-    // === Insert into users ===
+    // === Insert into users table ===
     const userInsertQuery = `
       INSERT INTO users (
         name, dob, gender, phone_number, email, password,
@@ -127,26 +134,28 @@ const createPoliceOfficer = async (req, res) => {
     const userResult = await client.query(userInsertQuery, userValues);
     const userId = userResult.rows[0].user_id;
 
+    // === Insert into police_details table ===
     const policeInsertQuery = `
       INSERT INTO police_details (
         user_id, badge_number, station_name, station_code, station_address,
         district, state, rank, shift_time,
-        official_email, emergency_contact
+        official_email, emergency_contact, station_pincode
       ) VALUES (
         $1, $2, $3, $4, $5,
         $6, $7, $8, $9,
-        $10, $11
+        $10, $11, $12
       )
     `;
     const policeValues = [
       userId, badge_number, station_name, station_code, station_address,
       district, state, rank, shift_time,
-      official_email, emergency_contact
+      official_email, emergency_contact, station_pincode // ✅ added station_pincode
     ];
     await client.query(policeInsertQuery, policeValues);
 
     await client.query('COMMIT');
 
+    // === Fetch full created police officer details ===
     const fullDetailsQuery = `
       SELECT 
         u.user_id,
@@ -159,6 +168,7 @@ const createPoliceOfficer = async (req, res) => {
         p.rank,
         p.official_email,
         p.station_address,
+        p.station_pincode,
         p.police_id,
         p.created_at
       FROM users u
@@ -167,6 +177,7 @@ const createPoliceOfficer = async (req, res) => {
     `;
     const fullDetails = await client.query(fullDetailsQuery, [userId]);
 
+    // === Send email with credentials ===
     try {
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
@@ -178,14 +189,14 @@ const createPoliceOfficer = async (req, res) => {
       return res.status(200).json({
         success: true,
         message: 'Police officer created and credentials emailed successfully.',
-        data: fullDetails.rows[0] 
+        data: fullDetails.rows[0]
       });
     } catch (emailError) {
       console.error('❌ Mail sending failed:', emailError);
       return res.status(500).json({
         success: false,
         message: 'Police created but email failed to send.',
-        data: fullDetails.rows[0] 
+        data: fullDetails.rows[0]
       });
     }
 
@@ -214,7 +225,6 @@ const getFilteredPolice = async (req, res) => {
       page = 1,
       limit = 10,
     } = req.query;
-
     const allowedGenders = ['male', 'female', 'other'];
     const allowedRanks = ['Inspector', 'Sub-Inspector'];
 
@@ -232,12 +242,16 @@ const getFilteredPolice = async (req, res) => {
       });
     }
 
-    if (pincode && !/^\d{6}$/.test(pincode)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid pincode. Must be a 6-digit number",
-      });
-    }
+    if (pincode) {
+  const trimmedPincode = pincode.trim();
+  if (!/^\d{6}$/.test(trimmedPincode)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid pincode. Must be a 6-digit number",
+    });
+  }
+}
+
 
     const currentPage = Number(page);
     const perPage = Number(limit);
@@ -291,10 +305,19 @@ const getFilteredPolice = async (req, res) => {
       values.push(rank);
     }
 
-    if (pincode) {
-      query += ` AND u.pincode = $${i++}`;
-      values.push(pincode);
-    }
+   if (pincode) {
+  const trimmedPincode = String(pincode).trim();
+  if (!/^\d{6}$/.test(trimmedPincode)) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid pincode. Must be a 6-digit number",
+    });
+  }
+  query += ` AND TRIM(p.station_pincode) = $${i++}`;
+  values.push(trimmedPincode);
+}
+
+
 
     // === Pagination ===
     const offset = (currentPage - 1) * perPage;
@@ -302,7 +325,6 @@ const getFilteredPolice = async (req, res) => {
     values.push(perPage, offset);
 
     const result = await pool.query(query, values);
-
     return res.status(200).json({
       success: true,
       police: result.rows,
