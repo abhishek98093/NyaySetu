@@ -36,6 +36,7 @@ export const fetchStats = async () => {
 // ✅ 2. Filtered Police Fetch
 export const fetchFilteredPolice = async ({ filters, page = 1, limit = 20 }) => {
   const token = localStorage.getItem("token");
+  console.log(filters);
   if (!token) {
     toast.error('Please login first. Not authorised');
     return { success: false };

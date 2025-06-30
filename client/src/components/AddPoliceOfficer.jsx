@@ -20,6 +20,7 @@ const AddPoliceOfficer = ({ onClose ,setPoliceList}) => {
         station_name: '',
         station_code: '',
         station_address: '',
+        station_pincode:'',
         rank: '',
         shift_time: '',
         official_email: '',
@@ -339,6 +340,17 @@ const AddPoliceOfficer = ({ onClose ,setPoliceList}) => {
                             rows="2"
                             value={formData.station_address}
                             onChange={handleChange('station_address')}
+                            required
+                            className="w-full mt-1 p-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+
+                        />
+                    </div>
+                    <div className="md:col-span-3">
+                        <label className="block font-medium">Station Pincode</label>
+                        <textarea
+                            rows="1"
+                            value={formData.station_pincode}
+                            onChange={handleChange('station_pincode')}
                             required
                             className="w-full mt-1 p-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
 

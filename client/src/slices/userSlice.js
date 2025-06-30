@@ -1,7 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  user: [],
+  user: null,
+  policeDetails: null,
   logedAt: null,
 };
 
@@ -11,13 +12,15 @@ const userSlice = createSlice({
   reducers: {
     setUser: (state, action) => {
       state.user = action.payload.user;
+      state.policeDetails = action.payload.policeDetails || null; // ✅ add policeDetails if present
       state.logedAt = Date.now();
     },
     updateUser: (state, action) => {
       state.user = action.payload.user;
+      state.policeDetails = action.payload.policeDetails || state.policeDetails;
       state.logedAt = Date.now();
     },
-    resetUser: () => initialState, // ✅ clean reset
+    resetUser: () => initialState,
   },
 });
 

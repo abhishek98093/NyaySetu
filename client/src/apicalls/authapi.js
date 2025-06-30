@@ -30,7 +30,12 @@ export const signup = async (formData, dispatch) => {
 
     if (result.data.token) {
       localStorage.setItem("token", result.data.token);
-      dispatch(setUser({ user: result.data.user, logedAt: Date.now() }));
+      dispatch(setUser({
+  user: result.data.user,
+  policeDetails: result.data.policeDetails, // ✅ add this line to store police details
+  logedAt: Date.now(),
+}));
+
       return { success: true };
     }
 
@@ -72,7 +77,12 @@ export const login = async (formData, dispatch) => {
 
     if (result.data.token) {
       localStorage.setItem("token", result.data.token);
-      dispatch(setUser({ user: result.data.user, logedAt: Date.now() }));
+      dispatch(setUser({
+  user: result.data.user,
+  policeDetails: result.data.policeDetails, // ✅ add this line to store police details
+  logedAt: Date.now(),
+}));
+
       return { success: true, token: result.data.token };
     }
 
@@ -92,7 +102,12 @@ export const resetPassword = async (formData, dispatch) => {
 
     if (result.data.token) {
       localStorage.setItem("token", result.data.token);
-      dispatch(setUser({ user: result.data.user, logedAt: Date.now() }));
+      dispatch(setUser({
+  user: result.data.user,
+  policeDetails: result.data.policeDetails, // ✅ add this line to store police details
+  logedAt: Date.now(),
+}));
+
       return { success: true, token: result.data.token };
     }
 
