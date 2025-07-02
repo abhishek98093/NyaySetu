@@ -140,6 +140,137 @@ const createTable = async () => {
     );
 `);
 
+            await pool.query(`
+               CREATE TABLE IF NOT EXISTS missing_persons (
+    missing_id SERIAL PRIMARY KEY,
+
+    -- Basic Info
+    name VARCHAR(255) NOT NULL,
+    age INT,
+    gender VARCHAR(20),
+
+    -- Description
+    description TEXT,
+
+    -- Profile Picture
+    profile_picture_url TEXT,
+
+    -- Last Seen Info
+    last_seen_location TEXT,
+    last_seen_time TIMESTAMP,
+
+    -- Address Info
+    address TEXT,          -- Absolute place or detailed address
+    district VARCHAR(100),
+    probable_location TEXT,
+    pincode VARCHAR(10),
+
+    -- Registered Pincode (where case is registered)
+    registered_pincode VARCHAR(10),
+
+    -- Price on Information (reward amount)
+    reward_on_information INTEGER,
+
+    -- Status Info
+    status VARCHAR(20) DEFAULT 'active' CHECK (
+        status IN ('active', 'found', 'closed')
+    ),
+
+    -- Added By Police
+    added_by INT REFERENCES police_details(police_id) ON DELETE SET NULL,
+
+    -- Timestamps
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+                `);
+
+            await pool.query(
+                `
+                CREATE TABLE IF NOT EXISTS criminals (
+    criminal_id SERIAL PRIMARY KEY,
+
+    -- Basic Info
+    name VARCHAR(255) NOT NULL,
+    age INT,
+    gender VARCHAR(20),
+
+    -- Description
+    description TEXT,
+
+    -- Profile Picture
+    profile_picture_url TEXT,
+
+    -- Last Seen Info
+    last_seen_location TEXT,
+    last_seen_time TIMESTAMP,
+
+    -- Probable Location (police assessment)
+    probable_location TEXT,
+
+    -- Address Info
+    address TEXT,          -- Absolute place or detailed address
+    district VARCHAR(100),
+    pincode VARCHAR(10), --probable address pincode
+
+    -- Registered Pincode (where case is registered)
+    registered_pincode VARCHAR(10),
+
+    star INTEGER CHECK (star BETWEEN 1 AND 5),
+
+    reward_on_information NUMERIC,
+
+    -- Status Info
+    status VARCHAR(20) DEFAULT 'wanted' CHECK (
+        status IN ('wanted', 'arrested', 'closed')
+    ),
+
+    -- Added By Police
+    added_by INT REFERENCES police_details(police_id) ON DELETE SET NULL,
+
+    -- Timestamps
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+`
+            );
+
+            await pool.query(
+                `CREATE TABLE IF NOT EXISTS updates (
+    update_id SERIAL PRIMARY KEY,
+
+    -- Type of Entity Update Belongs To
+    type VARCHAR(20) NOT NULL CHECK (type IN ('missing', 'criminal')),
+
+    -- Reference ID in missing_persons or criminals table
+    ref_id INT NOT NULL,
+
+    -- Who Updated
+    updated_by INT REFERENCES users(user_id) ON DELETE SET NULL,
+    updated_by_role VARCHAR(20) NOT NULL CHECK (updated_by_role IN ('police', 'user')),
+
+    -- Update Details
+    update_text TEXT,
+    proof_url TEXT,
+
+    -- Location Info
+    address TEXT,          -- Absolute place or detailed address
+    district VARCHAR(100),
+    pincode VARCHAR(10),
+
+    -- Time of Sighting
+    time_of_sighting TIMESTAMP,
+
+    -- Timestamps
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+`
+            );
+
 
         console.log("✅ Tables created or verified successfully");
 
