@@ -340,7 +340,6 @@ const getFilteredPolice = async (req, res) => {
 };
 
 const deletePoliceOfficer = async (req, res) => {
-  console.log(req.body);
   const { user_id } = req.body;
 
   if (!user_id || isNaN(user_id)) {

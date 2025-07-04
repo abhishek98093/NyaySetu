@@ -257,7 +257,204 @@ const deleteComplaint = async (req, res) => {
 };
 
 
+const getAllMissingAndCriminalsForUser = async (req, res) => {
+  try {
+    const user_id = req.user.user_id;
+    let { pincode } = req.query; // get pincode from query
+
+    // If pincode not provided in query, fetch user's registered pincode
+    if (!pincode) {
+      const userResult = await pool.query(
+        'SELECT pincode FROM users WHERE user_id = $1',
+        [user_id]
+      );
+
+      if (userResult.rows.length === 0) {
+        return res.status(403).json({ error: "User account not found." });
+      }
+
+      pincode = userResult.rows[0].pincode;
+
+      if (!pincode) {
+        return res.status(400).json({ error: "No pincode provided and user profile has no pincode. Please update your profile with pincode." });
+      }
+    }
+
+    // Fetch missing persons
+    const missingQuery = `
+      SELECT * FROM missing_persons
+      WHERE pincode = $1
+      ORDER BY created_at DESC
+    `;
+    const missingResult = await pool.query(missingQuery, [pincode]);
+
+    // Fetch criminals
+    const criminalQuery = `
+      SELECT * FROM criminals
+      WHERE pincode = $1
+      ORDER BY created_at DESC
+    `;
+    const criminalResult = await pool.query(criminalQuery, [pincode]);
+
+    // Return response
+    res.status(200).json({
+      success: true,
+      pincode_used: pincode, // optional: show which pincode was used
+      missing_persons: missingResult.rows,
+      criminals: criminalResult.rows
+    });
+
+  } catch (err) {
+    console.error("Error fetching data for user:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+const submitLead = async (req, res) => {
+  try {
+    const {
+      title,
+      media_urls,
+      description,
+      incident_datetime, // added
+      location_address,
+      town,
+      district,
+      state,
+      pincode,
+      country,
+      anonymous
+    } = req.body;
+
+    // ✅ Validate media_urls object length (max 3)
+    if (!media_urls || typeof media_urls !== 'object' || Object.keys(media_urls).length > 3) {
+      return res.status(400).json({ message: 'media_urls must be an object with up to 3 URLs' });
+    }
+
+    // ✅ Validate incident_datetime
+    if (!incident_datetime) {
+      return res.status(400).json({ message: 'incident_datetime is required' });
+    }
+    const parsedIncidentDatetime = new Date(incident_datetime);
+    if (isNaN(parsedIncidentDatetime.getTime())) {
+      return res.status(400).json({ message: 'Invalid incident_datetime format' });
+    }
+
+    // ✅ Determine user_id based on anonymous flag
+    let user_id = null;
+    const isAnonymous = anonymous || false;
+    if (!isAnonymous) {
+      user_id = req.user && req.user.user_id ? req.user.user_id : null;
+    }
+
+    const insertQuery = `
+      INSERT INTO leads
+      (user_id, title, media_urls, description, incident_datetime, location_address, town, district, state, pincode, country, anonymous)
+      VALUES
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      RETURNING *;
+    `;
+
+    const values = [
+      user_id, // can be null if anonymous
+      title,
+      media_urls,
+      description,
+      parsedIncidentDatetime, // added parsed date
+      location_address,
+      town,
+      district,
+      state,
+      pincode,
+      country || 'India',
+      isAnonymous
+    ];
+
+    const result = await pool.query(insertQuery, values);
+
+    res.status(201).json({
+      message: 'Lead submitted successfully',
+      data: result.rows[0]
+    });
+  } catch (error) {
+    console.error('Error submitting lead:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+const getTopContributorsInArea = async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+
+    // ✅ Fetch user's pincode first
+    const userResult = await pool.query(
+      `SELECT pincode, contribution_points, name, profile_picture_url FROM users WHERE user_id = $1`,
+      [userId]
+    );
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found', data: [] });
+    }
+
+    const userPincode = userResult.rows[0].pincode;
+
+    if (!userPincode) {
+      return res.status(200).json({
+        message: 'User has no pincode registered',
+        data: []
+      });
+    }
+
+    // ✅ Fetch top 15 contributors in that pincode
+    const topContributorsResult = await pool.query(
+      `SELECT user_id, name, profile_picture_url, contribution_points 
+       FROM users 
+       WHERE pincode = $1 
+       ORDER BY contribution_points DESC 
+       LIMIT 15`,
+      [userPincode]
+    );
+
+    const topContributors = topContributorsResult.rows || [];
+
+    // ✅ Check if user is already in top 15
+    const userInTop = topContributors.some(u => u.user_id === userId);
+
+    if (!userInTop) {
+      // ✅ Fetch user's rank in that pincode only if not in top 15
+      const userRankResult = await pool.query(
+        `SELECT user_id, name, profile_picture_url, contribution_points
+         FROM users
+         WHERE pincode = $1
+         ORDER BY contribution_points DESC`,
+        [userPincode]
+      );
+
+      const fullList = userRankResult.rows || [];
+      const userIndex = fullList.findIndex(u => u.user_id === userId);
+
+      if (userIndex !== -1) {
+        // ✅ Add user as 16th record with rank
+        topContributors.push({
+          ...fullList[userIndex],
+          rank: userIndex + 1
+        });
+      }
+    }
+
+    res.status(200).json({
+      message: 'Top contributors fetched successfully',
+      data: topContributors
+    });
+
+  } catch (error) {
+    console.error('Error fetching top contributors:', error);
+    res.status(500).json({ message: 'Internal Server Error', data: [] });
+  }
+};
 
 
 
-module.exports={submitVerification,submitComplaint,getComplaint,deleteComplaint}
+
+module.exports={getTopContributorsInArea,submitLead,getAllMissingAndCriminalsForUser,submitVerification,submitComplaint,getComplaint,deleteComplaint}

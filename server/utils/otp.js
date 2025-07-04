@@ -1,33 +1,48 @@
-const otpMap=new Map();
+const otpMap = new Map();
 
-const generateOtp=()=>{
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
+// Generate 6-digit OTP
+const generateOtp = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
 
-const verifyOtp=(email,otp)=>{
-    const record=otpMap.get(email);
-    if(!record) return {status:false,message:'send otp first'};
-    if(Date.now()>record.expiresAt){
-        otpMap.delete(email);
-        return {status:false,message:'Otp Expired , try again'};
-    }
-    const isValid=otp===record.otp;
-    if(!isValid){
-        return {status:false,message:'incorrect otp'};
-    }
-    return {status:true};
-
-}
-
-const setOtp = (email, otp) => {
+// Set OTP with type (signup or reset)
+const setOtp = ({email, otp, type}) => {
   if (otpMap.get(email)) otpMap.delete(email);
   try {
-    otpMap.set(email, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
-    return {status:true,message:'otp send successfully'};
+    otpMap.set(email, { 
+      otp, 
+      type, // store type for later verification
+      expiresAt: Date.now() + 5 * 60 * 1000 // expires in 5 minutes
+    });
+    return { status: true, message: 'OTP set successfully' };
   } catch (error) {
-    return {status:false,message:'error generating otp'};
+    return { status: false, message: 'Error setting OTP' };
   }
 };
+
+// Verify OTP with type
+const verifyOtp = ({email, otp, type}) => {
+  const record = otpMap.get(email);
+  if (!record) return { status: false, message: 'Send OTP first' };
+
+  if (Date.now() > record.expiresAt) {
+    otpMap.delete(email);
+    return { status: false, message: 'OTP expired, try again' };
+  }
+
+  if (record.otp !== otp) {
+    return { status: false, message: 'Incorrect OTP' };
+  }
+
+  if (record.type !== type) {
+    return { status: false, message: `OTP type mismatch. Expected ${record.type}` };
+  }
+
+  otpMap.delete(email);
+  return { status: true, message: 'OTP verified' };
+};
+
+
 
 
 const mailFormat = (otp) => {

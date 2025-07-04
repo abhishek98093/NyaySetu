@@ -10,7 +10,6 @@ router.post('/files', upload.single('file'), async (req, res) => {
       folder: 'your_folder_name', // Optional folder
       resource_type: 'auto' // Automatically detect image/video
     });
-    console.log('file saved successfully');
     res.json({
       success: true,
       url: result.secure_url

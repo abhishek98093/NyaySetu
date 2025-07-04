@@ -72,12 +72,11 @@ const getPoliceComplaints = async (req, res) => {
           [badgeNumbers]
         );
 
-        // Organize the fetched counts into a map for easy lookup
         const countsMap = {};
         countsResult.rows.forEach(row => {
           const badge = row.assigned_badge;
-          const status = row.status; // Assumes 'status' column values match expected keys
-          const count = parseInt(row.count); // Ensure count is a number
+          const status = row.status; 
+          const count = parseInt(row.count); 
 
           if (!countsMap[badge]) {
             countsMap[badge] = {
@@ -132,7 +131,7 @@ const getPoliceComplaints = async (req, res) => {
 
 const assignOfficerToComplaint = async (req, res) => {
   const { police_id, complaint_id } = req.body;
-    console.log(police_id,complaint_id)
+
   if (!police_id || !complaint_id) {
     return res.status(400).json({
       success: false,
@@ -227,7 +226,6 @@ const addMissingPerson = async (req, res) => {
   try {
     const police_user_id = req.user.user_id;
 
-    // Get police_id and station_pincode from police_details
     const policeResult = await pool.query(
       'SELECT police_id, station_pincode FROM police_details WHERE user_id = $1',
       [police_user_id]
@@ -248,14 +246,13 @@ const addMissingPerson = async (req, res) => {
       profile_picture_url,
       last_seen_location,
       last_seen_time,
-      probable_location,  // 🔥 Added here
+      probable_location,  
       address,
       district,
       pincode,
       reward_on_information = 0
     } = req.body;
 
-    // Validate reward_on_information
     if (!Number.isInteger(reward_on_information)) {
       return res.status(400).json({
         error: "Invalid 'reward_on_information'. It must be an integer."
@@ -446,7 +443,6 @@ const getAllMissingAndCriminals = async (req, res) => {
         const criminalResult = await pool.query(criminalQuery, [station_pincode]);
 
         // 4. Return combined response
-        console.log(missingResult.rows,criminalResult.rows);
         res.status(200).json({
             success:true,
             missing_persons: missingResult.rows,
@@ -464,7 +460,6 @@ const getAllMissingAndCriminals = async (req, res) => {
 const deleteMissingPerson = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(id);
     const result = await pool.query(
       'DELETE FROM missing_persons WHERE missing_id = $1 RETURNING *',
       [id]
@@ -473,7 +468,6 @@ const deleteMissingPerson = async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Missing person not found" });
     }
-    console.log(result.rows[0]);
     res.status(200).json({
       message: "Missing person deleted successfully",
       data: result.rows[0]
@@ -509,4 +503,200 @@ const deleteCriminal = async (req, res) => {
   }
 };
 
-module.exports = { getPoliceComplaints,assignOfficerToComplaint ,addCriminal,addMissingPerson,getAllMissingAndCriminals,deleteCriminal,deleteMissingPerson};
+
+const updateMissingPerson = async (req, res) => {
+  try {
+    const { id } = req.params; 
+    const {
+      probable_location,
+      pincode,
+      last_seen_location,
+      last_seen_time,
+      description,
+      reward_on_information,
+      status
+    } = req.body;
+
+    
+    const fields = [];
+    const values = [];
+    let count = 1;
+
+    if (probable_location !== undefined) {
+      fields.push(`probable_location = $${count++}`);
+      values.push(probable_location);
+    }
+
+    if (pincode !== undefined) {
+      fields.push(`pincode = $${count++}`);
+      values.push(pincode);
+    }
+
+    if (last_seen_location !== undefined) {
+      fields.push(`last_seen_location = $${count++}`);
+      values.push(last_seen_location);
+    }
+
+    if (last_seen_time !== undefined) {
+      fields.push(`last_seen_time = $${count++}`);
+      values.push(last_seen_time);
+    }
+
+    if (description !== undefined) {
+      fields.push(`description = $${count++}`);
+      values.push(description);
+    }
+
+    if (reward_on_information !== undefined) {
+      const intReward = parseInt(reward_on_information);
+      if (isNaN(intReward)) {
+        return res.status(400).json({
+          error: "'reward_on_information' must be an integer."
+        });
+      }
+      fields.push(`reward_on_information = $${count++}`);
+      values.push(intReward);
+    }
+
+    if (status !== undefined) {
+      if (!['active', 'found', 'closed'].includes(status)) {
+        return res.status(400).json({ error: "Invalid status value" });
+      }
+      fields.push(`status = $${count++}`);
+      values.push(status);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: "No valid fields to update." });
+    }
+
+    values.push(id);
+
+    const updateQuery = `
+      UPDATE missing_persons
+      SET ${fields.join(', ')}
+      WHERE missing_id = $${count}
+      RETURNING *;
+    `;
+
+    const result = await pool.query(updateQuery, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Missing person not found" });
+    }
+
+    res.status(200).json({
+      message: "Missing person updated successfully",
+      data: result.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Error updating missing person:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+const updateCriminal = async (req, res) => {
+  try {
+    const { id } = req.params; 
+
+    const {
+      description,
+      last_seen_location,
+      last_seen_time,
+      probable_location,
+      pincode,
+      star,
+      status,
+      reward_on_information
+    } = req.body;
+
+    const fields = [];
+    const values = [];
+    let count = 1;
+
+    if (description !== undefined) {
+      fields.push(`description = $${count++}`);
+      values.push(description);
+    }
+
+    if (last_seen_location !== undefined) {
+      fields.push(`last_seen_location = $${count++}`);
+      values.push(last_seen_location);
+    }
+
+    if (last_seen_time !== undefined) {
+      fields.push(`last_seen_time = $${count++}`);
+      values.push(last_seen_time);
+    }
+
+    if (probable_location !== undefined) {
+      fields.push(`probable_location = $${count++}`);
+      values.push(probable_location);
+    }
+
+    if (pincode !== undefined) {
+      fields.push(`pincode = $${count++}`);
+      values.push(pincode);
+    }
+
+    if (star !== undefined) {
+      const intStar = parseInt(star);
+      if (isNaN(intStar)) {
+        return res.status(400).json({ error: "'star' must be an integer." });
+      }
+      fields.push(`star = $${count++}`);
+      values.push(intStar);
+    }
+
+    if (reward_on_information !== undefined) {
+      const intReward = parseInt(reward_on_information);
+      if (isNaN(intReward)) {
+        return res.status(400).json({ error: "'reward_on_information' must be an integer." });
+      }
+      fields.push(`reward_on_information = $${count++}`);
+      values.push(intReward);
+    }
+
+    if (status !== undefined) {
+      if (!['wanted', 'arrested', 'closed'].includes(status)) {
+        return res.status(400).json({ error: "Invalid status value" });
+      }
+      fields.push(`status = $${count++}`);
+      values.push(status);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: "No valid fields to update." });
+    }
+
+    values.push(id);
+
+    const updateQuery = `
+      UPDATE criminals
+      SET ${fields.join(', ')}
+      WHERE criminal_id = $${count}
+      RETURNING *;
+    `;
+
+    const result = await pool.query(updateQuery, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Criminal not found" });
+    }
+
+    res.status(200).json({
+      message: "Criminal updated successfully",
+      data: result.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Error updating criminal:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+
+module.exports = {updateCriminal,updateMissingPerson, getPoliceComplaints,assignOfficerToComplaint ,addCriminal,addMissingPerson,getAllMissingAndCriminals,deleteCriminal,deleteMissingPerson};

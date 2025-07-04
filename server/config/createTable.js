@@ -4,47 +4,51 @@ const createTable = async () => {
     try {
         // Create users table
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS users (
-                user_id SERIAL PRIMARY KEY,
+    CREATE TABLE IF NOT EXISTS users (
+        user_id SERIAL PRIMARY KEY,
 
-                -- Basic Info
-                name VARCHAR(255),
-                dob DATE,
-                gender VARCHAR(20),
-                phone_number VARCHAR(15) UNIQUE,
-                email VARCHAR(255) UNIQUE,
-                password TEXT,
+        -- Basic Info
+        name VARCHAR(255),
+        dob DATE,
+        gender VARCHAR(20),
+        phone_number VARCHAR(15) UNIQUE,
+        email VARCHAR(255) UNIQUE,
+        password TEXT,
 
-                -- Aadhaar Info
-                aadhaar_number CHAR(12),
-                aadhaar_verified BOOLEAN DEFAULT FALSE,
-                aadhaar_front_url TEXT,
-                aadhaar_back_url TEXT,
+        -- Aadhaar Info
+        aadhaar_number CHAR(12),
+        aadhaar_verified BOOLEAN DEFAULT FALSE,
+        aadhaar_front_url TEXT,
+        aadhaar_back_url TEXT,
 
-                -- Profile Info
-                profile_picture_url TEXT,
-                is_profile_complete BOOLEAN DEFAULT FALSE,
-                verification_status VARCHAR(20) DEFAULT 'unverified' CHECK (
-                    verification_status IN ('unverified', 'pending', 'verified', 'failed')
-                ),
+        -- Profile Info
+        profile_picture_url TEXT,
+        is_profile_complete BOOLEAN DEFAULT FALSE,
+        verification_status VARCHAR(20) DEFAULT 'unverified' CHECK (
+            verification_status IN ('unverified', 'pending', 'verified', 'failed')
+        ),
 
-                -- Role
-                role VARCHAR(20) CHECK (role IN ('citizen', 'police', 'admin')),
+        -- Role
+        role VARCHAR(20) CHECK (role IN ('citizen', 'police', 'admin')),
 
-                -- Address
-                address_line1 VARCHAR(255),
-                address_line2 VARCHAR(255),
-                town VARCHAR(100),
-                district VARCHAR(100),
-                state VARCHAR(100),
-                pincode VARCHAR(10),
-                country VARCHAR(100) DEFAULT 'India',
+        -- Address
+        address_line1 VARCHAR(255),
+        address_line2 VARCHAR(255),
+        town VARCHAR(100),
+        district VARCHAR(100),
+        state VARCHAR(100),
+        pincode VARCHAR(10),
+        country VARCHAR(100) DEFAULT 'India',
 
-                -- Timestamps
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
-        `);
+        -- Contribution Points
+        contribution_points INT DEFAULT 0,
+
+        -- Timestamps
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+`);
+
 
         // Create complaints table
         await pool.query(`
@@ -238,6 +242,92 @@ const createTable = async () => {
 
 `
             );
+            await pool.query(`
+    CREATE TABLE IF NOT EXISTS leads (
+        lead_id SERIAL PRIMARY KEY,
+
+        user_id INT REFERENCES users(user_id) ON DELETE SET NULL,
+
+        title VARCHAR(255) NOT NULL CHECK (
+            title IN (
+                'Person Running Suspiciously',
+                'Car Driving Over Speed Limit',
+                'Bike Racing on Road',
+                'Group of People Fighting',
+                'Animal Injured on Road',
+                'Person Carrying Weapon',
+                'Unknown Person Lurking Around',
+                'Drunk Driver Sighting',
+                'Street Light Not Working',
+                'Broken Road or Pothole',
+                'Car Parked Illegally',
+                'Fire or Smoke Seen',
+                'Theft in Progress',
+                'Person Asking for Help',
+                'Loud Noise or Disturbance',
+                'Woman or Child Crying Alone',
+                'Illegal Construction Activity',
+                'Garbage Dumped on Road',
+                'Water Leakage or Pipeline Burst',
+                'Electricity Wire Hanging Low',
+                'Dangerous Dog Roaming',
+                'Public Harassment Incident',
+                'Person Taking Photos Suspiciously',
+                'Car With Broken Number Plate',
+                'Vehicle Abandoned for Long Time',
+                'Crowd Gathering Suddenly',
+                'Road Blocked by Protest',
+                'Person Being Beaten',
+                'Possible Kidnapping Scene',
+                'Person Selling Drugs',
+                'Stranger Knocking Doors Randomly',
+                'Shop Selling Illegal Items',
+                'Car Accident Seen',
+                'Child Begging Alone',
+                'Man Following Woman',
+                'Loud Argument in Public',
+                'Broken Traffic Signal',
+                'Unauthorized Vendor on Footpath',
+                'Tree Fallen on Road',
+                'Stranger Trying to Enter Houses',
+                'Person Throwing Stones at Vehicles',
+                'Bus Overcrowded Dangerously',
+                'Vehicle Emitting Excessive Smoke',
+                'Person Falling Unconscious',
+                'Elderly Person Needing Help',
+                'Lost Child Spotted',
+                'Snake or Wild Animal Sighting',
+                'Speeding Truck or Lorry',
+                'Person Selling Fake Products',
+                'Large Gathering Without Permission'
+            )
+        ),
+
+        media_urls JSONB NOT NULL, -- stores up to 3 media URLs as object
+
+        description TEXT NOT NULL,
+
+        incident_datetime TIMESTAMP NOT NULL, -- new field added
+
+        location_address TEXT,
+        town VARCHAR(100),
+        district VARCHAR(100),
+        state VARCHAR(100),
+        pincode VARCHAR(10),
+        country VARCHAR(100) DEFAULT 'India',
+
+        anonymous BOOLEAN DEFAULT FALSE,
+
+        status VARCHAR(20) DEFAULT 'pending' CHECK (
+            status IN ('pending', 'reviewed', 'verified', 'rejected')
+        ),
+
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+`);
+
+
 
             await pool.query(
                 `CREATE TABLE IF NOT EXISTS updates (
