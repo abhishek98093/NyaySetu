@@ -180,8 +180,8 @@ const InspectorAssignOfficer = ({ complaint, setAssignOff }) => {
                       <p className="font-medium text-gray-800">{si.name}</p>
                       <div className="flex justify-between items-center text-xs">
                         <span className="text-gray-500">Badge: {si.badge_number}</span>
-                        <span className={getPendingCaseColor(si.complaintCounts.pending)}>
-                          {si.complaintCounts.pending} pending
+                        <span className={getPendingCaseColor(si.complaintCounts.total-si.complaintCounts.resolved-si.complaintCounts.rejected)}>
+                          {si.complaintCounts.total-si.complaintCounts.resolved-si.complaintCounts.rejected} pending
                         </span>
                       </div>
                     </div>
@@ -212,7 +212,7 @@ const InspectorAssignOfficer = ({ complaint, setAssignOff }) => {
                       ? 'bg-red-100 text-red-800' 
                       : 'bg-green-100 text-green-800'
                   }`}>
-                    {selectedOfficer.complaintCounts.pending} pending
+                    {selectedOfficer.complaintCounts.total-selectedOfficer.complaintCounts.rejected-selectedOfficer.complaintCounts.resolved} pending
                   </span>
                 </div>
               </div>

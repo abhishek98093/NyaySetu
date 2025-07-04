@@ -1,79 +1,115 @@
-import {useState,useRef,useEffect} from 'react';
-import { Link, useNavigate ,useLocation} from 'react-router-dom';
-import logo from '../assets/Nyay-setu-logo.svg';
-import menuicon from '../assets/menu-icon.png';
-import closemenu from '../assets/close.png';
+import React, { useState, useEffect } from 'react';
+import { Menu, X, Shield } from 'lucide-react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+
 const GuestNavbar = () => {
-    const navLinks = [];
-    const navigate=useNavigate();
-    const location=useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    const ref = useRef(null)
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-    const [isScrolled, setIsScrolled] = useState(false);
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const islogin=location.pathname.includes("login") ;
-    const issignup=location.pathname.includes("signup") ;
-    const ishome=location.pathname==='/landingpage';
+  const isHomePage = location.pathname === '/landingpage' || location.pathname === '/';
+  const isLoginPage = location.pathname.includes("login");
+  const isSignupPage = location.pathname.includes("signup");
 
-    useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 10);
-        };
-        window.addEventListener("scroll", handleScroll);
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-    return (
-            
-            <nav className={`fixed top-0 left-0 bg-transparent-500 w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${isScrolled ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" : "py-4 md:py-6"}`}>
+  useEffect(() => setIsMenuOpen(false), [location.pathname]);
 
-                {/* Logo */}
-                <Link to='/'>
-                    <img src={logo} alt="logo" className={`h-9 ${isScrolled && "invert opacity-80"}`} />
-                </Link>
+  const navClasses = `
+    fixed top-0 left-0 w-full flex items-center justify-between
+    px-4 sm:px-6 lg:px-8 transition-all duration-300 ease-in-out z-50
+    ${isScrolled ? "bg-white/80 shadow-md backdrop-blur-lg py-3" : "bg-transparent py-5"}
+  `;
 
+  const renderButtons = () => {
+    if (isHomePage) {
+      return (
+        <>
+          <button onClick={() => navigate('/login')} className="text-gray-700 font-semibold hover:text-blue-600 transition-colors duration-300">
+            Login
+          </button>
+          <button onClick={() => navigate('/signup')} className="bg-blue-600 text-white px-5 py-2.5 rounded-full font-semibold hover:bg-blue-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+            Sign Up
+          </button>
+        </>
+      );
+    }
+    if (isLoginPage) {
+      return (
+        <button onClick={() => navigate('/signup')} className="bg-blue-600 text-white px-5 py-2.5 rounded-full font-semibold hover:bg-blue-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+          Sign Up
+        </button>
+      );
+    }
+    if (isSignupPage) {
+      return (
+        <button onClick={() => navigate('/login')} className="bg-blue-600 text-white px-5 py-2.5 rounded-full font-semibold hover:bg-blue-700 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+          Login
+        </button>
+      );
+    }
+    return null;
+  };
 
-                {/* Desktop Right */}
-                <div className="hidden md:flex items-center gap-4">
-                    {/* <img src={menuicon} alt="search" className={`${isScrolled && 'invert'} h-7 transition-all duration-500`} /> */}
-                    {(ishome || issignup) && <button onClick={()=>navigate('/login')} className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500">
-                        Login
-                    </button> }
-                    {(ishome || islogin) &&  <button  onClick={()=>navigate('/signup')} className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500">
-                        Signup
-                    </button> }
-                    {(issignup || islogin)  && <button onClick={()=>navigate('/')} className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
-                    Home
-                </button> }
-                </div>
+  return (
+    <nav className={navClasses}>
+      <div className="flex items-center justify-between w-full">
+        {/* Logo */}
+        <Link to='/' className="flex items-center gap-2 font-bold text-2xl text-blue-600">
+          <Shield className="h-8 w-8" />
+          <span>Nyay Setu</span>
+        </Link>
 
-                {/* Mobile Menu Button */}
-                <div className="flex items-center gap-3 md:hidden">
-                   <img onClick={()=>setIsMenuOpen(!isMenuOpen)} src={menuicon} alt="menu-icon" className={`${isScrolled && "invert"} h-4`} />
-                </div>
+        {/* Desktop Buttons */}
+        <div className="hidden md:flex items-center gap-6">
+          {renderButtons()}
+        </div>
 
-            {/* Mobile Menu */}
-            <div className={`fixed top-0 left-0 w-full h-screen bg-white text-base flex flex-col md:hidden items-center justify-center gap-6 font-medium text-gray-800 transition-all duration-500 ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
-                <button className="absolute top-4 right-4" onClick={() => setIsMenuOpen(false)}>
-                    <img src={closemenu} alt="menu-icon" className="h-4 w-4" />
-                </button>
+        {/* Mobile Menu Button */}
+        <div className="flex items-center md:hidden">
+          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-gray-800 p-2">
+            <Menu className="h-6 w-6" />
+          </button>
+        </div>
+      </div>
 
+      {/* Mobile Menu Panel */}
+      <div className={`
+        fixed top-0 left-0 w-full h-screen bg-white text-gray-800
+        flex flex-col items-center justify-center gap-8
+        transition-transform duration-500 ease-in-out
+        ${isMenuOpen ? "translate-x-0" : "-translate-x-full"}
+      `}>
+        <button className="absolute top-6 right-6 p-2" onClick={() => setIsMenuOpen(false)}>
+          <X className="h-7 w-7" />
+        </button>
 
-
-                {(ishome || issignup) && <button onClick={()=>navigate('/login')}className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
-                    Login
-                </button> }
-                {(ishome || islogin)  && <button onClick={()=>navigate('/signup')} className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
-                    Signup
-                </button> }
-                {(issignup || islogin)  && <button onClick={()=>navigate('/')} className="bg-black text-white px-8 py-2.5 rounded-full transition-all duration-500">
-                    Home
-                </button> }
-            </div>
-
-            </nav>
-    );
-}
+        <div className="flex flex-col gap-8 text-center">
+          {isHomePage && (
+            <>
+              <button onClick={() => navigate('/login')} className="text-2xl font-semibold">Login</button>
+              <button onClick={() => navigate('/signup')} className="bg-blue-600 text-white px-8 py-3 rounded-full text-xl font-semibold">Sign Up</button>
+            </>
+          )}
+          {isLoginPage && (
+            <button onClick={() => navigate('/signup')} className="bg-blue-600 text-white px-8 py-3 rounded-full text-xl font-semibold">Sign Up</button>
+          )}
+          {isSignupPage && (
+            <button onClick={() => navigate('/login')} className="bg-blue-600 text-white px-8 py-3 rounded-full text-xl font-semibold">Login</button>
+          )}
+          {!isHomePage && (
+            <button onClick={() => navigate('/')} className="text-2xl font-semibold">Home</button>
+          )}
+        </div>
+      </div>
+    </nav>
+  );
+};
 
 export default GuestNavbar;

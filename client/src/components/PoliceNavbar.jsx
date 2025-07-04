@@ -11,8 +11,8 @@ const CitizenNavbar = () => {
     const navLinks = [
         { name: 'Home', path: '/' },
         { name: 'Complaint Section', path: '/inspectorcomplaintpage' },
-        { name: 'Public Listing', path: '/' },
-        { name: 'Report Sightning', path: '/' },
+        { name: 'Public Listing', path: '/policelistingpage' },
+        { name: 'Sightning Reported', path: '/' },
         { name: 'Info Section', path: '/' },
         { name: 'About', path: '/' }
     ];

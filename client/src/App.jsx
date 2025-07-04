@@ -18,39 +18,42 @@ import AdminPerformenceAnalyse from './pages/AdminPerformenceAnalyse';
 import InspectorDashboard from './pages/InspectorDashboard';
 import SubInspectorDashboard from './pages/SubInspectorDashboard';
 import InspectorComplaintPage from './pages/InspectorComplaintDashboard';
-
-// ✅ Import TokenExpiryChecker
+import PoliceListingPage from './pages/PoliceListingPage';
+import TestPincode from './pages/TestPincode';
+import CitizenListingPage from './pages/CitizenListingPage';
+import CitizenLeadsPage from './pages/CitizenLeadsPage';
 import TokenExpiryChecker from './components/TokenExpiryChecker';
 
 const App = () => {
   return (
     <div className="min-h-screen flex flex-col">
-      {/* ✅ Periodic token validity checker */}
-      <TokenExpiryChecker />
+  <TokenExpiryChecker />
+  <Navbar />
+  <div className="flex-grow "> {/* Adjust mt-16 based on Navbar height */}
+    <Routes>
+      <Route path='/' element={<HomeRedirect />} />
+      <Route path='/landingpage' element={<HomePage />} />
+      <Route path='/login' element={<LoginPage />} />
+      <Route path='/signup' element={<SignupPage />} />
+      <Route path='/citizendashboard' element={<CitizenDashboard />} />
+      <Route path='/policedashboard' element={<PoliceDashboard />} />
+      <Route path='/admindashboard' element={<AdminDashboard />} />
+      <Route path='/citizenComplaintPage' element={<CitizenComplaintPage />} />
+      <Route path='/infopage' element={<InfoPage />} />
+      <Route path='/personnelpage' element={<AdminPersonnel />} />
+      <Route path='/personnelperformance' element={<AdminPerformenceAnalyse />} />
+      <Route path='/inspectordashboard' element={<InspectorDashboard />} />
+      <Route path='/subinspectordashboard' element={<SubInspectorDashboard />} />
+      <Route path='/inspectorcomplaintpage' element={<InspectorComplaintPage />} />
+      <Route path='/policelistingpage' element={<PoliceListingPage />} />
+      <Route path='/testpincode' element={<TestPincode />} />
+      <Route path='/citizenlistingpage' element={<CitizenListingPage />} />
+      <Route path='/citizenleadspage' element={<CitizenLeadsPage />} />
+    </Routes>
+  </div>
+  <Footer />
+</div>
 
-      <Navbar />
-
-      <div className="flex-grow">
-        <Routes>
-          <Route path='/' element={<HomeRedirect />} />
-          <Route path='/landingpage' element={<HomePage />} />
-          <Route path='/login' element={<LoginPage />} />
-          <Route path='/signup' element={<SignupPage />} />
-          <Route path='/citizendashboard' element={<CitizenDashboard />} />
-          <Route path='/policedashboard' element={<PoliceDashboard />} />
-          <Route path='/admindashboard' element={<AdminDashboard />} />
-          <Route path='/citizenComplaintPage' element={<CitizenComplaintPage />} />
-          <Route path='/infopage' element={<InfoPage />} />
-          <Route path='/personnelpage' element={<AdminPersonnel />} />
-          <Route path='/personnelperformance' element={<AdminPerformenceAnalyse />} />
-          <Route path='/inspectordashboard' element={<InspectorDashboard />} />
-          <Route path='/subinspectordashboard' element={<SubInspectorDashboard />} />
-          <Route path='/inspectorcomplaintpage' element={<InspectorComplaintPage />} />
-        </Routes>
-      </div>
-
-      <Footer />
-    </div>
   );
 };
 

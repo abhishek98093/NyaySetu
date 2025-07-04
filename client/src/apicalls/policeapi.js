@@ -36,3 +36,63 @@ export const assignOfficer = async ({ complaint_id, officer_id }) => {
     }
   }
 };
+
+
+export const getAllMissingAndCriminals = async () => {
+  const res = await api.get('/police/getAllMissingAndCriminals');
+
+  if (!res.data.success) {
+    throw new Error(res.data.message || "Failed to fetch data");
+  }
+
+  console.log(res.data);
+  return res.data;
+};
+
+export const addCriminal = async (formData) => {
+  const res = await api.post('/police/addCriminal', formData);
+
+  if (res.status !== 201) {
+    throw new Error(`Failed to add criminal: ${res.status} ${res.statusText}`);
+  }
+
+  return res.data;
+};
+
+export const addMissingPerson = async (formData) => {
+  const res = await api.post('/police/addMissingPerson', formData);
+
+  if (res.status !== 201) {
+    throw new Error(`Failed to add criminal: ${res.status} ${res.statusText}`);
+  }
+
+  return res.data;
+};
+
+export const deleteMissingPerson = async (id) => {
+  const res = await api.delete(`/police/deleteMissingPerson/${id}`);
+  if (res.status !== 200 && res.status !== 204) {
+    throw new Error(`Failed to delete missing person: ${res.status} ${res.statusText}`);
+  }
+  return res.data;
+};
+
+export const deleteCriminal = async (id) => {
+  const res = await api.delete(`/police/deleteCriminal/${id}`);
+  if (res.status !== 200 && res.status !== 204) {
+    throw new Error(`Failed to delete criminal: ${res.status} ${res.statusText}`);
+  }
+  return res.data;
+};
+
+export const updateMissingPerson = async ({ id, data }) => {
+  console.log(data);
+  const res = await api.put(`/police/updateMissingPerson/${id}`, data);
+  return res.data; 
+};
+
+export const updateCriminal=async({id,data})=>{
+  const res=await api.put(`/police/updateCriminal/${id}`,data);
+  return res.data;
+}
+

@@ -86,17 +86,37 @@ const CitizenComplaintPage = () => {
       )}
 
       <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">My Complaints</h1>
-            <button
-              onClick={handleClick}
-              className="w-full md:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm transition-colors"
+        <div className="w-full bg-white shadow-lg rounded-b-xl">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6"> {/* Reduced padding here */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 md:gap-8">
+          {/* Main heading for the page */}
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight tracking-tight">
+            My Complaints
+          </h1>
+          {/* Button for filing a new complaint */}
+          <button
+            onClick={handleClick}
+            className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-300 ease-in-out
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 flex items-center justify-center space-x-2"
+          >
+            {/* Plus icon */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
             >
-              + File New Complaint
-            </button>
-          </div>
+              <path
+                fillRule="evenodd"
+                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <span>File New Complaint</span>
+          </button>
         </div>
+      </div>
+    </div>
       </header>
 
       <main className="flex-grow">

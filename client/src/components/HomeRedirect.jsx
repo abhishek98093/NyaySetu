@@ -19,6 +19,8 @@ const HomeRedirect = () => {
           navigate('/policedashboard', { replace: true });
           break;
         default:
+          // If no valid role, remove token and redirect to landing page
+          localStorage.removeItem('token');
           navigate('/landingpage', { replace: true });
       }
     } else {

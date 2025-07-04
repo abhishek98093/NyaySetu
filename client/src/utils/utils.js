@@ -42,18 +42,27 @@ const extractRole = (token) => {
     }
   };
 
-  const isValidToken=()=>{
-    const token=localStorage.getItem("token");
-    if(!token) return false;
-    try{
-        const decoded=jwtDecode(token);
-        const currentTime = Math.floor(Date.now() / 1000); 
-        return decoded.exp>currentTime;
-    }catch(err){
-        return null;
-    }
-  }
+ const isValidToken = () => {
+  const token = localStorage.getItem("token");
+  if (!token) return false;
 
+  try {
+    const decoded = jwtDecode(token);
+    const currentTime = Math.floor(Date.now() / 1000);
+
+    // Ensure decoded has exp field and is a number
+    if (decoded && typeof decoded.exp === 'number') {
+      return decoded.exp > currentTime;
+    } else {
+      console.error("Invalid token payload structure");
+      return false;
+    }
+
+  } catch (err) {
+    console.error("Token decoding error", err);
+    return false;
+  }
+};
 const clearAuth = () => {
     localStorage.removeItem("token");
 };
