@@ -19,6 +19,7 @@ const transporter = nodemailer.createTransport({
 
 
 const sendotp = async (req, res) => {
+  console.log('request recieved');
   const { email, type } = req.body;
 
   if (!email || !type) {

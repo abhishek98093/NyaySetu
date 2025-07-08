@@ -697,6 +697,103 @@ const updateCriminal = async (req, res) => {
   }
 };
 
+const getFilteredLeads = async (req, res) => {
+  const {
+    title,
+    startDate,
+    endDate,
+    town,
+    district,
+    state,
+    pincode,
+    country,
+  } = req.body;
+  console.log(req.body);
+  try {
+    let query = 'SELECT * FROM leads WHERE 1=1';
+    const values = [];
+
+    if (title) {
+      values.push(title);
+      query += ` AND title = $${values.length}`;
+    }
+
+    if (startDate) {
+      values.push(`${startDate} 00:00:00`);
+      query += ` AND incident_datetime >= $${values.length}`;
+    }
+
+    if (endDate) {
+      values.push(`${endDate} 23:59:59`);
+      query += ` AND incident_datetime <= $${values.length}`;
+    }
+
+    if (town) {
+      values.push(town);
+      query += ` AND town ILIKE $${values.length}`;
+    }
+
+    if (district) {
+      values.push(district);
+      query += ` AND district ILIKE $${values.length}`;
+    }
+
+    if (state) {
+      values.push(state);
+      query += ` AND state ILIKE $${values.length}`;
+    }
+
+    if (pincode) {
+      values.push(pincode);
+      query += ` AND pincode = $${values.length}`;
+    }
+
+    if (country) {
+      values.push(country);
+      query += ` AND country ILIKE $${values.length}`;
+    }
+
+    query += ' ORDER BY incident_datetime DESC'; 
+
+    const result = await pool.query(query, values);
+    console.log(result.rows);
+    return res.status(200).json({ leads: result.rows });
+  } catch (error) {
+    console.error('Error fetching filtered leads:', error);
+    return res.status(500).json({ message: 'Server error while fetching leads.' });
+  }
+};
 
 
-module.exports = {updateCriminal,updateMissingPerson, getPoliceComplaints,assignOfficerToComplaint ,addCriminal,addMissingPerson,getAllMissingAndCriminals,deleteCriminal,deleteMissingPerson};
+const awardStar = async (req, res) => {
+  const { user_id } = req.body;
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE users
+       SET contribution_points = contribution_points + 1,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE user_id = $1
+       RETURNING user_id, contribution_points`,
+      [user_id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.status(200).json({
+      message: 'Contribution points increased by 1',
+      data: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Error in awardStar:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+module.exports = {awardStar,getFilteredLeads,updateCriminal,updateMissingPerson, getPoliceComplaints,assignOfficerToComplaint ,addCriminal,addMissingPerson,getAllMissingAndCriminals,deleteCriminal,deleteMissingPerson};
