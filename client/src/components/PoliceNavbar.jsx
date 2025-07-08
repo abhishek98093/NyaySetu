@@ -12,9 +12,9 @@ const CitizenNavbar = () => {
         { name: 'Home', path: '/' },
         { name: 'Complaint Section', path: '/inspectorcomplaintpage' },
         { name: 'Public Listing', path: '/policelistingpage' },
-        { name: 'Sightning Reported', path: '/' },
-        { name: 'Info Section', path: '/' },
-        { name: 'About', path: '/' }
+        { name: 'Find Leads', path: '/policeleadspage' },
+        { name: 'Info Section', path: '/infosection' },
+        { name: 'About', path: '/about' }
     ];
 
 

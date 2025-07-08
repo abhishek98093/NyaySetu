@@ -330,46 +330,89 @@ const CitizenLeadsForm = ({ onClose }) => {
     }));
   };
 
-  const handleFileChange = async (e) => {
-    const newFiles = Array.from(e.target.files);
+  // const handleFileChange = async (e) => {
+  //   const newFiles = Array.from(e.target.files);
 
-    if (files.length + newFiles.length > 3) {
-      toast.info('You can upload a maximum of 3 files');
-      return;
-    }
+  //   if (files.length + newFiles.length > 3) {
+  //     toast.info('You can upload a maximum of 3 files');
+  //     return;
+  //   }
 
-    setFiles((prev) => [...prev, ...newFiles]);
-    setUploadingStatus((prev) => [...prev, ...newFiles.map(() => 'Uploading...')]);
+  //   setFiles((prev) => [...prev, ...newFiles]);
+  //   setUploadingStatus((prev) => [...prev, ...newFiles.map(() => 'Uploading...')]);
 
-    for (let i = 0; i < newFiles.length; i++) {
-      const file = newFiles[i];
-      const index = files.length + i;
+  //   for (let i = 0; i < newFiles.length; i++) {
+  //     const file = newFiles[i];
+  //     const index = files.length + i;
 
-      try {
-        const res = await uploadToCloudinary(file);
-        if (res.success) {
-          setUploadedFiles((prev) => [
-            ...prev,
-            { url: res.url, public_id: res.public_id, type: res.resource_type },
-          ]);
-          setUploadingStatus((prev) => {
-            const updated = [...prev];
-            updated[index] = 'Uploaded';
-            return updated;
-          });
-        } else {
-          throw new Error('Upload failed');
-        }
-      } catch (error) {
+  //     try {
+  //       const res = await uploadToCloudinary(file);
+  //       if (res.success) {
+  //         setUploadedFiles((prev) => [
+  //           ...prev,
+  //           { url: res.url, public_id: res.public_id, type: res.resource_type },
+  //         ]);
+  //         setUploadingStatus((prev) => {
+  //           const updated = [...prev];
+  //           updated[index] = 'Uploaded';
+  //           return updated;
+  //         });
+  //       } else {
+  //         throw new Error('Upload failed');
+  //       }
+  //     } catch (error) {
+  //       setUploadingStatus((prev) => {
+  //         const updated = [...prev];
+  //         updated[index] = 'Failed';
+  //         return updated;
+  //       });
+  //       toast.error(`Failed to upload ${file.name}`);
+  //     }
+  //   }
+  // };
+
+
+    const handleFileChange = async (e) => {
+  const selectedFiles = Array.from(e.target.files);
+
+  if (files.length + selectedFiles.length > 3) {
+    toast.info('You can upload a maximum of 3 files');
+    return;
+  }
+
+  for (const file of selectedFiles) {
+    // Add file and set status to uploading
+    setFiles((prev) => [...prev, file]);
+    setUploadingStatus((prev) => [...prev, 'Uploading...']);
+
+    const index = files.length; // files.length is old length, but this works as we append one by one
+
+    try {
+      const res = await uploadToCloudinary(file);
+
+      if (res.success) {
+        setUploadedFiles((prev) => [
+          ...prev,
+          { url: res.url, public_id: res.public_id, type: res.resource_type },
+        ]);
         setUploadingStatus((prev) => {
           const updated = [...prev];
-          updated[index] = 'Failed';
+          updated[index] = 'Uploaded';
           return updated;
         });
-        toast.error(`Failed to upload ${file.name}`);
+      } else {
+        throw new Error('Upload failed');
       }
+    } catch (error) {
+      setUploadingStatus((prev) => {
+        const updated = [...prev];
+        updated[index] = 'Failed';
+        return updated;
+      });
+      toast.error(`Failed to upload ${file.name}`);
     }
-  };
+  }
+};
 
   const handleRemoveFile = (index) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
@@ -411,6 +454,8 @@ const CitizenLeadsForm = ({ onClose }) => {
   if (leadMutation.isPending) {
     return <LoadingPage status="load" message="Adding lead, please wait" />;
   }
+  const isUploading = uploadingStatus.some(status => status === 'Uploading...');
+
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto font-sans">
@@ -600,12 +645,13 @@ const CitizenLeadsForm = ({ onClose }) => {
               {/* Submit Button */}
               <div className="pt-2">
                 <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg shadow-md hover:from-blue-700 hover:to-blue-800 focus:outline-none"
-                >
-                  {isSubmitting ? 'Submitting...' : 'Submit Lead'}
-                </button>
+  type="submit"
+  disabled={isSubmitting || isUploading}
+  className="w-full py-3 px-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium rounded-lg shadow-md hover:from-blue-700 hover:to-blue-800 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+>
+  {isSubmitting ? 'Submitting...' : isUploading ? 'Uploading Files...' : 'Submit Lead'}
+</button>
+
               </div>
             </form>
           </div>

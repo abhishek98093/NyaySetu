@@ -96,3 +96,24 @@ export const updateCriminal=async({id,data})=>{
   return res.data;
 }
 
+export const getFilteredLeads = async ({ data }) => {
+  console.log('api hit ');
+  try {
+    const res = await api.post('/police/getFilteredLeads', data);
+    console.log(res.data);
+    return res.data; 
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+};
+
+
+export const awardStar = async ({ user_id }) => {
+  try {
+    const res = await api.post('/police/awardStar', { user_id });
+    return res.data; 
+  } catch (error) {
+    console.error('Error awarding star:', error);
+    throw error; 
+  }
+};

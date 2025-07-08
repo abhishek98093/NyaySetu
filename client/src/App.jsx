@@ -22,6 +22,9 @@ import PoliceListingPage from './pages/PoliceListingPage';
 import TestPincode from './pages/TestPincode';
 import CitizenListingPage from './pages/CitizenListingPage';
 import CitizenLeadsPage from './pages/CitizenLeadsPage';
+import PoliceLeadsPage from './pages/policeLeadsPage';
+import InfoSection from './pages/InfoSection';
+import About from './pages/About';
 import TokenExpiryChecker from './components/TokenExpiryChecker';
 
 const App = () => {
@@ -29,7 +32,7 @@ const App = () => {
     <div className="min-h-screen flex flex-col">
   <TokenExpiryChecker />
   <Navbar />
-  <div className="flex-grow "> {/* Adjust mt-16 based on Navbar height */}
+  <div className="flex-grow mt-16"> {/* Adjust mt-16 based on Navbar height */}
     <Routes>
       <Route path='/' element={<HomeRedirect />} />
       <Route path='/landingpage' element={<HomePage />} />
@@ -49,6 +52,9 @@ const App = () => {
       <Route path='/testpincode' element={<TestPincode />} />
       <Route path='/citizenlistingpage' element={<CitizenListingPage />} />
       <Route path='/citizenleadspage' element={<CitizenLeadsPage />} />
+      <Route path='/policeleadspage' element={<PoliceLeadsPage />} />
+      <Route path='/infosection' element={<InfoSection />} />
+      <Route path='/about' element={<About />} />
     </Routes>
   </div>
   <Footer />
