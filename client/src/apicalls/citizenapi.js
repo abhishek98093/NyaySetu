@@ -70,3 +70,8 @@ export const getTopContributorsInArea = async () => {
   const response = await api.get('/citizen/getTopContributorsInArea');
   return response.data; 
 };
+
+export const submitSighting = async (sightingData) => {
+  const response = await api.post('/citizen/createSightingUpdate', sightingData);
+  return response.data;
+};

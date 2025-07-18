@@ -14,7 +14,7 @@ import HomeRedirect from './components/HomeRedirect';
 import CitizenComplaintPage from './pages/CitizenComplaintPage';
 import InfoPage from './pages/InfoPage';
 import AdminPersonnel from './pages/AdminPersonnel';
-import AdminPerformenceAnalyse from './pages/AdminPerformenceAnalyse';
+import AdminPerformanceAnalyser from './pages/AdminPerformanceAnalyser';
 import InspectorDashboard from './pages/InspectorDashboard';
 import SubInspectorDashboard from './pages/SubInspectorDashboard';
 import InspectorComplaintPage from './pages/InspectorComplaintDashboard';
@@ -44,7 +44,7 @@ const App = () => {
       <Route path='/citizenComplaintPage' element={<CitizenComplaintPage />} />
       <Route path='/infopage' element={<InfoPage />} />
       <Route path='/personnelpage' element={<AdminPersonnel />} />
-      <Route path='/personnelperformance' element={<AdminPerformenceAnalyse />} />
+      <Route path='/adminpersonnelperformance' element={<AdminPerformanceAnalyser />} />
       <Route path='/inspectordashboard' element={<InspectorDashboard />} />
       <Route path='/subinspectordashboard' element={<SubInspectorDashboard />} />
       <Route path='/inspectorcomplaintpage' element={<InspectorComplaintPage />} />

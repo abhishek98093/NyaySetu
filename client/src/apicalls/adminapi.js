@@ -190,8 +190,62 @@ export const getPolicePersonnelAnalysis = async () => {
 
 
 
+export const fetchComplaintsByPincode = async ({ pincode }) => {
+  if (!pincode || !/^\d{6}$/.test(pincode)) {
+    throw new Error("Pincode must be a valid 6-digit number.");
+  }
+
+  try {
+    const result = await api.get(`/admin/getComplaintsByStationPincode/${pincode}`);
+
+    if (result.status === 200) {
+      return {
+        success: true,
+        complaints: result.data.data || [],
+        message: result.data.message || "Complaints fetched successfully.",
+      };
+    }
+
+    throw new Error(result.data.message || "Failed to fetch complaints.");
+  } catch (error) {
+    console.error("❌ fetchComplaintsByPincode Error:", error);
+    throw new Error(
+      error.response?.data?.message ||
+      error.response?.statusText ||
+      error.message ||
+      "Unknown error while fetching complaints"
+    );
+  }
+};
 
 
+export const fetchComplaintsByBadge = async ({ badgeNumber }) => {
+  if (!badgeNumber) {
+    throw new Error("Badge number is required.");
+  }
+
+  try {
+    const result = await api.get(`/admin/getComplaintsByBadge/${badgeNumber}`);
+
+    if (result.status === 200) {
+      return {
+        success: true,
+        complaints: result.data.data || [],
+        message: result.data.message || "Complaints fetched successfully.",
+      };
+    }
+
+    throw new Error(result.data.message || "Failed to fetch complaints.");
+  } catch (error) {
+    console.error("❌ fetchComplaintsByBadge Error:", error);
+    throw new Error(
+      error.response?.data?.message ||
+      error.response?.statusText ||
+      error.message ||
+      "Unknown error while fetching complaints"
+    );
+  }
+};
 // import axios from "axios";
 // // const API_BASE = "http://localhost:3000"; // or your API URL
 // const API_BASE = import.meta.env.VITE_API_BASE;

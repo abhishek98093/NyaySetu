@@ -455,6 +455,61 @@ const getTopContributorsInArea = async (req, res) => {
 };
 
 
+const createSightingUpdate = async (req, res) => {
+  try {
+    const {
+      type,
+      ref_id,
+      update_text,
+      proof_url,
+      address,
+      pincode,
+      district,
+      time_of_sighting,
+    } = req.body;
+
+    const { user_id, user_role } = req.user; // 🔥 From JWT (not frontend)
+
+    if (
+      !type || !ref_id || !update_text || !proof_url ||
+      !address || !pincode || !district || !time_of_sighting
+    ) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    const insertQuery = `
+      INSERT INTO updates (
+        type, ref_id, updated_by, updated_by_role,
+        update_text, proof_url, address, pincode, district, time_of_sighting
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *
+    `;
+
+    const values = [
+      type,
+      ref_id,
+      user_id,
+      user_role,
+      update_text,
+      proof_url,
+      address,
+      pincode,
+      district,
+      time_of_sighting,
+    ];
+
+    const result = await pool.query(insertQuery, values);
+
+    res.status(201).json({ success: true, data: result.rows[0] });
+  } catch (err) {
+    console.error('Error in createSightingUpdate:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
 
 
-module.exports={getTopContributorsInArea,submitLead,getAllMissingAndCriminalsForUser,submitVerification,submitComplaint,getComplaint,deleteComplaint}
+
+
+
+
+
+module.exports={createSightingUpdate,getTopContributorsInArea,submitLead,getAllMissingAndCriminalsForUser,submitVerification,submitComplaint,getComplaint,deleteComplaint}

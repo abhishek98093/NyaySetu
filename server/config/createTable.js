@@ -341,7 +341,7 @@ const createTable = async () => {
 
     -- Who Updated
     updated_by INT REFERENCES users(user_id) ON DELETE SET NULL,
-    updated_by_role VARCHAR(20) NOT NULL CHECK (updated_by_role IN ('police', 'user')),
+    updated_by_role VARCHAR(20) NOT NULL CHECK (updated_by_role IN ('police', 'citizen')),
 
     -- Update Details
     update_text TEXT,

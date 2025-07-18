@@ -1,5 +1,5 @@
 const express=require('express');
-const { submitVerification ,submitComplaint, getComplaint, deleteComplaint, getAllMissingAndCriminalsForUser, submitLead, getTopContributorsInArea} = require('../controller/citizenController');
+const { submitVerification ,submitComplaint, getComplaint, deleteComplaint, getAllMissingAndCriminalsForUser, submitLead, getTopContributorsInArea, createSightingUpdate} = require('../controller/citizenController');
 const {authenticate,authorise} =require('../middleware/authMiddleware');
 const router=express.Router();
 router.put('/submitVerification',authenticate,authorise(['citizen']),submitVerification);
@@ -9,4 +9,5 @@ router.delete('/deleteComplaint/:id',authenticate,authorise(['citizen']),deleteC
 router.get('/getAllMissingAndCriminalsForUser',authenticate,authorise(['citizen']),getAllMissingAndCriminalsForUser);
 router.post('/submitLead',authenticate,authorise(['citizen']),submitLead);
 router.get('/getTopContributorsInArea',authenticate,authorise(['citizen']),getTopContributorsInArea);
+router.post('/createSightingUpdate',authenticate,authorise(['citizen']),createSightingUpdate);
 module.exports=router;

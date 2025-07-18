@@ -2,6 +2,7 @@ const pool=require('../config/db');
 const bcrypt =require('bcrypt');
 require('dotenv').config();
 const {policeWelcome} =require('../utils/mailFormat')
+const isValidPincode = (pincode) => /^\d{6}$/.test(pincode);
 
 const crypto = require('crypto');
 
@@ -489,4 +490,103 @@ const updatePoliceRank = async (req, res) => {
   }
 };
 
-module.exports={fetchStats,createPoliceOfficer,getFilteredPolice,deletePoliceOfficer,updatePoliceRank,getPolicePersonnelAnalysis}
+const getComplaintsByStationPincode = async (req, res) => {
+  try {
+    const { pincode } = req.params;
+
+    console.log("📥 Received station pincode:", pincode);
+
+    if (!isValidPincode(pincode)) {
+      return res.status(200).json({
+        message: "Invalid pincode. Must be a 6-digit number.",
+        data: [],
+      });
+    }
+
+    const badgeRes = await pool.query(
+      `SELECT badge_number FROM police_details WHERE station_pincode = $1`,
+      [pincode]
+    );
+
+    if (badgeRes.rowCount === 0) {
+      return res.status(200).json({
+        message: "No police found for this station pincode",
+        data: [],
+      });
+    }
+
+    const badgeList = badgeRes.rows.map(row => row.badge_number);
+
+    const complaintsRes = await pool.query(
+      `SELECT * FROM complaints WHERE assigned_badge = ANY($1::text[])`,
+      [badgeList]
+    );
+
+    return res.status(200).json({
+      message:
+        complaintsRes.rowCount > 0
+          ? `Found ${complaintsRes.rowCount} complaint(s) under station pincode ${pincode}`
+          : `No complaints found under station pincode ${pincode}`,
+      data: complaintsRes.rows,
+    });
+
+  } catch (err) {
+    console.error("❌ Error in getComplaintsByStationPincode:", err.stack || err.message);
+    return res.status(500).json({
+      message: "Internal server error while retrieving complaints",
+      data: null,
+    });
+  }
+};
+
+const getComplaintsByBadge = async (req, res) => {
+  try {
+    const { badgeNumber } = req.params;
+
+    console.log("📥 Received badge number:", badgeNumber);
+
+    if (!badgeNumber) {
+      return res.status(400).json({
+        message: "Badge number is required",
+        data: null,
+      });
+    }
+
+    const badgeRes = await pool.query(
+      `SELECT police_id FROM police_details WHERE badge_number = $1`,
+      [badgeNumber]
+    );
+
+    if (badgeRes.rowCount === 0) {
+      return res.status(200).json({
+        message: "No police found with this badge number",
+        data: [],
+      });
+    }
+
+    const complaintsRes = await pool.query(
+      `SELECT * FROM complaints WHERE assigned_badge = $1`,
+      [badgeNumber]
+    );
+
+    return res.status(200).json({
+      message:
+        complaintsRes.rowCount > 0
+          ? `Found ${complaintsRes.rowCount} complaint(s) for badge ${badgeNumber}`
+          : `No complaints found for badge ${badgeNumber}`,
+      data: complaintsRes.rows,
+    });
+
+  } catch (err) {
+    console.error("❌ Error in getComplaintsByBadge:", err.stack || err.message);
+    return res.status(500).json({
+      message: "Internal server error while retrieving complaints",
+      data: null,
+    });
+  }
+};
+
+
+
+
+module.exports={fetchStats,createPoliceOfficer,getFilteredPolice,deletePoliceOfficer,updatePoliceRank,getPolicePersonnelAnalysis,getComplaintsByBadge,getComplaintsByStationPincode}
