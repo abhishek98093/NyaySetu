@@ -242,7 +242,6 @@ const getFilteredPolice = async (req, res) => {
         message: "Invalid rank. Allowed: Inspector, Sub-Inspector",
       });
     }
-    console.log('');
 
     if (pincode) {
   const trimmedPincode = pincode.trim();

@@ -92,7 +92,6 @@ export const verifyOtp = async ({email, otp, type}) => {
       };
     } else {
       // ❌ Throw error if backend response indicates failure
-      console.log('');
       throw new Error(response.data?.message || "OTP verification failed.");
     }
 
