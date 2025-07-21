@@ -327,12 +327,10 @@ const submitLead = async (req, res) => {
       anonymous
     } = req.body;
 
-    // ✅ Validate media_urls object length (max 3)
     if (!media_urls || typeof media_urls !== 'object' || Object.keys(media_urls).length > 3) {
       return res.status(400).json({ message: 'media_urls must be an object with up to 3 URLs' });
     }
 
-    // ✅ Validate incident_datetime
     if (!incident_datetime) {
       return res.status(400).json({ message: 'incident_datetime is required' });
     }

@@ -708,7 +708,6 @@ const getFilteredLeads = async (req, res) => {
     pincode,
     country,
   } = req.body;
-  console.log(req.body);
   try {
     let query = 'SELECT * FROM leads WHERE 1=1';
     const values = [];
@@ -756,7 +755,6 @@ const getFilteredLeads = async (req, res) => {
     query += ' ORDER BY incident_datetime DESC'; 
 
     const result = await pool.query(query, values);
-    console.log(result.rows);
     return res.status(200).json({ leads: result.rows });
   } catch (error) {
     console.error('Error fetching filtered leads:', error);
@@ -796,4 +794,142 @@ const awardStar = async (req, res) => {
   }
 };
 
-module.exports = {awardStar,getFilteredLeads,updateCriminal,updateMissingPerson, getPoliceComplaints,assignOfficerToComplaint ,addCriminal,addMissingPerson,getAllMissingAndCriminals,deleteCriminal,deleteMissingPerson};
+const getLeadsByCriminalId = async (req, res) => {
+  const { criminalId } = req.params;
+
+  if (!criminalId) {
+    return res.status(400).json({ message: 'Criminal ID is required.' });
+  }
+
+  try {
+    let query = `
+      SELECT 
+        updated_by, 
+        update_text, 
+        proof_url, 
+        address, 
+        district, 
+        pincode, 
+        time_of_sighting 
+      FROM updates 
+      WHERE ref_id = $1 AND type = $2
+      ORDER BY time_of_sighting DESC
+    `;
+
+    const values = [criminalId, 'criminal'];
+
+    const result = await pool.query(query, values);
+    return res.status(200).json({ leads: result.rows });
+  } catch (error) {
+    console.error('Error fetching criminal leads:', error);
+    return res.status(500).json({ message: 'Server error while fetching leads.' });
+  }
+};
+
+const getLeadsByMissingId = async (req, res) => {
+  const { missingId } = req.params;
+
+  if (!missingId) {
+    return res.status(400).json({ message: 'Missing Person ID is required.' });
+  }
+
+  try {
+    const query = `
+      SELECT 
+        updated_by, 
+        update_text, 
+        proof_url, 
+        address, 
+        district, 
+        pincode, 
+        time_of_sighting 
+      FROM updates 
+      WHERE ref_id = $1 AND type = $2
+      ORDER BY time_of_sighting DESC
+    `;
+
+    const values = [missingId, 'missing'];
+    const result = await pool.query(query, values);
+    console.log(result.rows);
+    return res.status(200).json({ leads: result.rows });
+
+  } catch (error) {
+    console.error('Error fetching missing person leads:', error);
+    return res.status(500).json({ message: 'Server error while fetching leads.' });
+  }
+};
+const updateComplaintStatus = async (req, res) => {
+  console.log('requrest recieved');
+  const { complaintId } = req.params;
+  const { status, remark } = req.body;
+
+  // Optional: Validate status field
+  const validStatuses = ['pending', 'in-progress', 'resolved', 'rejected'];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ error: 'Invalid status value.' });
+  }
+
+  try {
+    const query = `
+      UPDATE complaints
+      SET status = $1,
+          remark = $2,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE complaint_id = $3
+      RETURNING *;
+    `;
+
+    const values = [status, remark, complaintId];
+    const result = await pool.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Complaint not found.' });
+    }
+    console.log('request recieved');
+    res.status(200).json({ success: true, updatedComplaint: result.rows[0] });
+  } catch (err) {
+    console.error('Error updating complaint status:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const updateCaseFile = async (req, res) => {
+  console.log('Update case file request received');
+
+  const { complaintId } = req.params;
+  const { case_file_url } = req.body;
+
+  // Validate case_file_url
+  if (typeof case_file_url !== 'string' || case_file_url.trim() === '') {
+    return res.status(400).json({ error: 'Missing or invalid case_file_url in request body.' });
+  }
+
+  try {
+    const query = `
+      UPDATE complaints
+      SET case_file_url = $1,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE complaint_id = $2
+      RETURNING *;
+    `;
+
+    const values = [case_file_url.trim(), complaintId];
+    const result = await pool.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Complaint not found.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Case file updated successfully.',
+      updatedComplaint: result.rows[0]
+    });
+  } catch (err) {
+    console.error('Error updating case file:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+module.exports = {updateCaseFile, updateComplaintStatus,getLeadsByMissingId, getLeadsByCriminalId, awardStar,getFilteredLeads,updateCriminal,updateMissingPerson, getPoliceComplaints,assignOfficerToComplaint ,addCriminal,addMissingPerson,getAllMissingAndCriminals,deleteCriminal,deleteMissingPerson};

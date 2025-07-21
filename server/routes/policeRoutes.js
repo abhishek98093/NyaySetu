@@ -1,6 +1,6 @@
 const express = require('express');
 const { authenticate, authorise } = require('../middleware/authMiddleware');
-const {getFilteredLeads, getPoliceComplaints ,assignOfficerToComplaint,addCriminal,addMissingPerson, getAllMissingAndCriminals,deleteCriminal,deleteMissingPerson, updateMissingPerson, updateCriminal, awardStar} = require('../controller/policeController');
+const {updateCaseFile, updateComplaintStatus,getLeadsByCriminalId,getFilteredLeads, getPoliceComplaints ,assignOfficerToComplaint,addCriminal,addMissingPerson, getAllMissingAndCriminals,deleteCriminal,deleteMissingPerson, updateMissingPerson, updateCriminal, awardStar, getLeadsByMissingId} = require('../controller/policeController');
 
 const router = express.Router();
 
@@ -15,4 +15,9 @@ router.put('/updateMissingPerson/:id',authenticate,authorise(['police']),updateM
 router.put('/updateCriminal/:id',authenticate,authorise(['police']),updateCriminal);
 router.post('/getFilteredLeads',authenticate,authorise(['police']),getFilteredLeads)
 router.post('/awardStar',authenticate,authorise(['police']),awardStar);
+router.get('/criminal/:criminalId', authenticate, authorise(['police', 'admin']), getLeadsByCriminalId);
+router.get('/missing/:missingId',authenticate,authorise(['police','admin']),getLeadsByMissingId);
+router.put('/complaints/:complaintId', authenticate,authorise(['police']), updateComplaintStatus);
+router.put('/uploadcasefile/:complaintId/', authenticate, authorise(['police']), updateCaseFile);
+
 module.exports = router;
