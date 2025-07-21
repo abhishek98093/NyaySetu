@@ -171,13 +171,23 @@ const CitizenNavbar = () => {
     ];
 
     const handleLinkClick = (link) => {
-        if (link.requiresVerification && user?.verification_status === 'unverified') {
-            toast.error('Please upload your documents before proceeding.');
-            navigate('/citizendashboard');
-            return;
-        }
-        navigate(link.path);
-    };
+    if (
+        link.requiresVerification &&
+        (user?.verification_status === 'unverified' || user?.verification_status === 'failed')
+    ) {
+        const errorMessage =
+            user?.verification_status === 'failed'
+                ? 'Verification failed. Please verify first, upload correct documents.'
+                : 'Please upload your documents before proceeding.';
+
+        toast.error(errorMessage);
+        navigate('/citizendashboard'); // Redirect to upload/retry page
+        return;
+    }
+
+    navigate(link.path);
+};
+
 
     React.useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 10);
