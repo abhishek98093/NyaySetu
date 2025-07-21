@@ -26,7 +26,8 @@ import PoliceLeadsPage from './pages/policeLeadsPage';
 import InfoSection from './pages/InfoSection';
 import About from './pages/About';
 import TokenExpiryChecker from './components/TokenExpiryChecker';
-
+import SubInspectorComplaintPage from './pages/SubInspectorComplaintPage';
+import PoliceVerificationPage from './pages/PoliceVerificationPage';
 const App = () => {
   return (
     <div className="min-h-screen flex flex-col">
@@ -54,6 +55,8 @@ const App = () => {
       <Route path='/citizenleadspage' element={<CitizenLeadsPage />} />
       <Route path='/policeleadspage' element={<PoliceLeadsPage />} />
       <Route path='/infosection' element={<InfoSection />} />
+      <Route path='/subinspectorcomplaintpage' element={<SubInspectorComplaintPage />} />
+      <Route path='/policeverificationpage' element={<PoliceVerificationPage />} />
       <Route path='/about' element={<About />} />
     </Routes>
   </div>

@@ -117,3 +117,95 @@ export const awardStar = async ({ user_id }) => {
     throw error; 
   }
 };
+
+export const getLeads = async (criminalId) => {
+  try {
+    const res = await api.get(`/police/criminal/${criminalId}`);
+    console.log('api hit');
+    console.log(res.data);
+    return res.data; // assuming the backend returns { leads: [...] }
+  } catch (error) {
+    console.error('Error fetching leads:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const getMissingLeads = async (missingId) => {
+  try {
+
+
+    const res = await api.get(`/police/missing/${missingId}`);
+    console.log(res.data);
+    return res.data; // assuming the backend returns { leads: [...] }
+  } catch (error) {
+    console.error('Error fetching leads:', error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const updateComplaintStatus = async ({ complaintId, status, remark }) => {
+  try {
+    const res = await api.put(`/police/complaints/${complaintId}`, {
+      status,
+      remark,
+    });
+    return res.data;
+  } catch (err) {
+    console.error('Error updating complaint:', err.response?.data || err.message);
+    throw err;
+  }
+};
+
+
+
+export const uploadCaseFile = async ({complaintId, case_file_url}) => {
+  try {
+    // Trim and basic validation
+    if (typeof case_file_url !== 'string' || case_file_url.trim() === '') {
+      throw new Error('Invalid or empty case file URL');
+    }
+
+    const res = await api.put(`/police/uploadcasefile/${complaintId}/`, {
+      case_file_url: case_file_url.trim(),
+    });
+
+    return res.data;
+  } catch (err) {
+    console.error('Error uploading case file:', err.response?.data || err.message);
+    throw new Error(
+      err.response?.data?.error || 'Failed to upload case file. Please try again.'
+    );
+  }
+};
+
+export const getPendingUsersByPincode = async (pincode) => {
+  try {
+    const res = await api.get(`/police/pending/${pincode}`);
+    
+    if (!res.data || !Array.isArray(res.data.users)) {
+      throw new Error('Invalid response format');
+    }
+
+    return res.data.users;
+  } catch (err) {
+    console.error('Error fetching pending users:', err.response?.data || err.message);
+    throw new Error(err.response?.data?.error || 'Failed to fetch pending users');
+  }
+};
+
+export const updateUserVerificationStatus = async ({ userId, status }) => {
+  try {
+    const res = await api.put(`/police/verify/${userId}`, { status });
+
+    if (!res.data?.success) {
+      throw new Error(res.data?.message || 'Failed to update status');
+    }
+
+    return res.data;
+  } catch (err) {
+    console.error('Error updating verification status:', err.response?.data || err.message);
+    throw new Error(err.response?.data?.error || 'Failed to update verification status');
+  }
+};
+
+

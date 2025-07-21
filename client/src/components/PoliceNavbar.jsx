@@ -6,17 +6,45 @@ import closemenu from '../assets/close.png';
 import React from 'react';
 import { Shield } from 'lucide-react';
 import useLogoutUser from '../utils/useLogoutUser';
-
+import { useSelector } from 'react-redux';
 const CitizenNavbar = () => {
-    
+    const policeDetails = useSelector(state => state.user.policeDetails);
+    const rank = policeDetails?.rank?.toLowerCase();
+
+  const isInspector = rank === 'inspector';
+  const isSubInspector = rank === 'sub-inspector';
+    // const navLinks = [
+    //     { name: 'Home', path: '/' },
+    //     { name: 'Complaint Section', path: '/inspectorcomplaintpage' },
+    //     { name: 'Public Listing', path: '/policelistingpage' },
+    //     { name: 'Find Leads', path: '/policeleadspage' },
+    //     { name: 'Info Section', path: '/infosection' },
+    //     { name: 'About', path: '/about' }
+    // ];
     const navLinks = [
-        { name: 'Home', path: '/' },
-        { name: 'Complaint Section', path: '/inspectorcomplaintpage' },
-        { name: 'Public Listing', path: '/policelistingpage' },
-        { name: 'Find Leads', path: '/policeleadspage' },
-        { name: 'Info Section', path: '/infosection' },
-        { name: 'About', path: '/about' }
-    ];
+    { name: 'Home', path: '/' },
+    { name: 'Listing', path: '/policelistingpage' },
+    { name: 'Find Leads', path: '/policeleadspage' },
+    { name: 'Info Section', path: '/infosection' },
+    { name: 'About', path: '/about' },
+  ];
+
+  if (rank === 'inspector') {
+    navLinks.splice(1, 0, {
+      name: 'Complaints',
+      path: '/inspectorcomplaintpage',
+    });
+  } else if (rank === 'sub-inspector') {
+    navLinks.splice(1, 0, {
+      name: 'Complaints',
+      path: '/subinspectorcomplaintpage',
+    });
+
+    navLinks.splice(2, 0, {
+      name: 'ver.',
+      path: '/policeverificationpage',
+    });
+  }
 
 
     const navigate = useNavigate();

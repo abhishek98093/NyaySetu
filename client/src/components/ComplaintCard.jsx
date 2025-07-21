@@ -31,9 +31,12 @@ const ComplaintCard = ({ complaint }) => {
  
 
   const handleViewCaseFile = () => {
-    console.log("Open case file for complaint_id:", complaint.complaint_id);
-    // Navigate to case file view page
-  };
+  if (complaint.case_file_url) {
+    window.open(complaint.case_file_url, '_blank', 'noopener,noreferrer');
+  } else {
+    toast.error("No case file URL available.");
+  }
+};
 
   return (
     <div className={`border rounded-lg overflow-hidden mb-6 ${status.border} ${status.bg} transition-all hover:shadow-lg`}>
