@@ -22,7 +22,7 @@ import PoliceListingPage from './pages/PoliceListingPage';
 import TestPincode from './pages/TestPincode';
 import CitizenListingPage from './pages/CitizenListingPage';
 import CitizenLeadsPage from './pages/CitizenLeadsPage';
-import PoliceLeadsPage from './pages/policeLeadsPage';
+import PoliceLeadsPage from './pages/PoliceLeadsPage';
 import InfoSection from './pages/InfoSection';
 import About from './pages/About';
 import TokenExpiryChecker from './components/TokenExpiryChecker';
