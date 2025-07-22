@@ -931,5 +931,75 @@ const updateCaseFile = async (req, res) => {
   }
 };
 
+const getPendingUsersByPincode = async (req, res) => {
+  const { pincode } = req.params;
 
-module.exports = {updateCaseFile, updateComplaintStatus,getLeadsByMissingId, getLeadsByCriminalId, awardStar,getFilteredLeads,updateCriminal,updateMissingPerson, getPoliceComplaints,assignOfficerToComplaint ,addCriminal,addMissingPerson,getAllMissingAndCriminals,deleteCriminal,deleteMissingPerson};
+  try {
+    const query = `
+      SELECT *
+      FROM users
+      WHERE pincode = $1 AND verification_status = 'pending';
+    `;
+    const result = await pool.query(query, [pincode]);
+
+    res.status(200).json({ users: result.rows });
+  } catch (err) {
+    console.error('Error fetching pending users:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+const updateVerificationStatus = async (req, res) => {
+  const { userId } = req.params;
+  const { status } = req.body;
+
+  const validStatuses = ['verified', 'failed'];
+
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ error: 'Invalid status. Must be "verified" or "failed".' });
+  }
+
+  try {
+    let query, values;
+
+    if (status === 'verified') {
+      query = `
+        UPDATE users
+        SET verification_status = $1,
+            aadhaar_verified = TRUE,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = $2
+        RETURNING user_id, verification_status, aadhaar_verified;
+      `;
+      values = [status, userId];
+    } else {
+      query = `
+        UPDATE users
+        SET verification_status = $1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = $2
+        RETURNING user_id, verification_status, aadhaar_verified;
+      `;
+      values = [status, userId];
+    }
+
+    const result = await pool.query(query, values);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `User status updated to ${status}`,
+      data: result.rows[0],
+    });
+  } catch (err) {
+    console.error('Error updating verification status:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+
+module.exports = {updateVerificationStatus, getPendingUsersByPincode,updateCaseFile, updateComplaintStatus,getLeadsByMissingId, getLeadsByCriminalId, awardStar,getFilteredLeads,updateCriminal,updateMissingPerson, getPoliceComplaints,assignOfficerToComplaint ,addCriminal,addMissingPerson,getAllMissingAndCriminals,deleteCriminal,deleteMissingPerson};
