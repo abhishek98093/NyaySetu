@@ -5,7 +5,6 @@ require('dotenv').config();
 const {createTable} =require('./config/createTable');
 const authRoutes=require('./routes/authRoutes');
 const citizenRoutes=require('./routes/citizenRoutes');
-const uploadRoutes=require('./routes/uploadRoutes');
 const adminRoutes=require('./routes/adminRoutes');
 const policeRoutes=require('./routes/policeRoutes');
 // Middleware
@@ -21,7 +20,6 @@ createTable().then(()=>{
 
 app.use('/api/auth',authRoutes);
 app.use('/api/citizen',citizenRoutes);
-app.use('/api/upload',uploadRoutes);
 app.use('/api/admin',adminRoutes);
 app.use('/api/police',policeRoutes);
 
