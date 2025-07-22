@@ -199,6 +199,7 @@ function LoginPage() {
             }
 
             // 🔥 API function throws on failure
+            console.log('ver');
             const result = await verifyOtp({ email, otp, type });
 
 

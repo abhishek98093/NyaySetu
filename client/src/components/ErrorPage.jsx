@@ -1,5 +1,4 @@
 import React from 'react';
-
 // Inline SVG for AlertTriangle (no external library needed)
 const AlertTriangle = ({ size = 24, className = "" }) => (
   <svg

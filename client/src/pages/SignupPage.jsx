@@ -7,7 +7,8 @@ import { useDispatch } from "react-redux";
 import { setUser } from "../slices/userSlice";
 import FloatingBackground from "../components/FloatingBackground";
 import { useMutation } from "@tanstack/react-query";
-
+import LoadingPage from "../components/LoadingPage";
+import ErrorPage from "../components/ErrorPage";
 const signupSchema = z.object({
   name: z.string().min(1, "Name is required"),
   dob: z.string().refine(val => !isNaN(Date.parse(val)), { message: "Invalid date format" }),
@@ -241,7 +242,8 @@ const sendOtpMutation = useMutation({
         })
     }
 
-
+if(signupMutation.isPending) return <LoadingPage status="load" message="Creating account, please wait" />;
+if(signupMutation.isError) return <ErrorPage message={signupMutation.error?.message || "Something went wrong"} />;
  return (
   <div className="relative min-h-screen bg-white overflow-hidden">
     <FloatingBackground />

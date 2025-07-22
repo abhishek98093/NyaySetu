@@ -1,7 +1,7 @@
 import React from 'react';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes ,useLocation} from 'react-router-dom';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -29,11 +29,14 @@ import TokenExpiryChecker from './components/TokenExpiryChecker';
 import SubInspectorComplaintPage from './pages/SubInspectorComplaintPage';
 import PoliceVerificationPage from './pages/PoliceVerificationPage';
 const App = () => {
+   const location = useLocation(); // 👈 current path
+
+  const shouldApplyMargin = location.pathname !== '/landingpage';
   return (
     <div className="min-h-screen flex flex-col">
   <TokenExpiryChecker />
   <Navbar />
-  <div className="flex-grow mt-16"> {/* Adjust mt-16 based on Navbar height */}
+   <div className={`flex-grow ${shouldApplyMargin ? 'mt-16' : ''}`}> {/* Adjust mt-16 based on Navbar height */}
     <Routes>
       <Route path='/' element={<HomeRedirect />} />
       <Route path='/landingpage' element={<HomePage />} />

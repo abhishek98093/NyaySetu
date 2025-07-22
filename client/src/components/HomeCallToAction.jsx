@@ -18,12 +18,6 @@ export default function HomeCallToAction() {
                     >
                         Report a Crime
                     </button>
-                    <button
-                        onClick={() => navigate('/contact')}
-                        className="w-full sm:w-auto bg-blue-500 text-white font-bold px-8 py-4 rounded-lg text-lg hover:bg-blue-400 transition-all duration-300 transform hover:scale-105 shadow-lg"
-                    >
-                        Contact Us
-                    </button>
                 </div>
             </div>
         </section>
