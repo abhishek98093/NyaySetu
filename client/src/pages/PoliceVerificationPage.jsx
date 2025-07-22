@@ -4,6 +4,8 @@ import { getPendingUsersByPincode,updateUserVerificationStatus } from '../apical
 import { toast } from 'react-toastify';
 import ProfileCard from '../components/ProfileCard';
 import { useSelector } from 'react-redux';
+import LoadingPage from '../components/LoadingPage';
+import ErrorPage from '../components/ErrorPage';
 const PoliceVerificationPage = () => {
     const policeDetails = useSelector(state => state.user.policeDetails);
     const pincode=policeDetails.station_pincode;
@@ -28,8 +30,12 @@ const PoliceVerificationPage = () => {
     onError: (err) => toast.error(err.message || 'Update failed'),
   });
 
-  if (isLoading) return <p>Loading...</p>;
-  if (error) return <p className="text-red-600">Error: {error.message}</p>;
+  if (isLoading) return(
+    <LoadingPage status="load" message={"fetching pending verification"} />
+  )
+  if (error) return(
+    <ErrorPage message={"Something went wrong"} />
+  )
 
   return (
     <div className="p-6">
