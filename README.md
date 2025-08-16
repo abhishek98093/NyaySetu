@@ -116,7 +116,7 @@ VITE_LOCATIONIQ_TOKEN=your_locationiq_api_key
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/yourusername/nyaysetu.git
+git clone https://github.com/abhishek98093/NyaySetu.git
 cd nyaysetu
 
 # 2. Backend Setup
