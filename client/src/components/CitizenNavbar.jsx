@@ -167,7 +167,7 @@ const CitizenNavbar = () => {
         { name: 'Public Listing', path: '/citizenlistingpage', requiresVerification: true },
         { name: 'Upload Lead', path: '/citizenleadspage' ,requiresVerification:true},
         { name: 'Info Section', path: '/infopage' },
-        { name: 'About', path: '/' }
+        { name: 'About', path: '/about' }
     ];
 
     const handleLinkClick = (link) => {

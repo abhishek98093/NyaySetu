@@ -56,6 +56,8 @@ const ProfileCard = ({ onClose, user }) => {
     const [profilePicFile, setProfilePicFile] = useState(null);
     const [isLoading, setLoading] = useState(false);
     const [validationErrors, setValidationErrors] = useState({});
+    const [filesUploading, setFilesUploading] = useState(false);
+
 
     const needsVerification = ['unverified', 'failed'].includes(user.verification_status);
     const isVerified = user.verification_status === 'verified';
@@ -83,95 +85,200 @@ const ProfileCard = ({ onClose, user }) => {
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+    //     setLoading(true);
 
-        try {
-            // First check if files are selected (basic validation)
-            if (!profilePicFile && !formData.profile_picture_url) {
-                toast.error("Profile picture is required");
-                setValidationErrors(prev => ({ ...prev, profile_picture_url: "Profile picture is required" }));
-                return;
-            }
-            if (!aadhaarFrontFile && !formData.aadhaar_front_url) {
-                toast.error("Aadhaar front image is required");
-                setValidationErrors(prev => ({ ...prev, aadhaar_front_url: "Aadhaar front image is required" }));
-                return;
-            }
-            if (!aadhaarBackFile && !formData.aadhaar_back_url) {
-                toast.error("Aadhaar back image is required");
-                setValidationErrors(prev => ({ ...prev, aadhaar_back_url: "Aadhaar back image is required" }));
-                return;
-            }
+    //     try {
+    //         // First check if files are selected (basic validation)
+    //         if (!profilePicFile && !formData.profile_picture_url) {
+    //             toast.error("Profile picture is required");
+    //             setValidationErrors(prev => ({ ...prev, profile_picture_url: "Profile picture is required" }));
+    //             return;
+    //         }
+    //         if (!aadhaarFrontFile && !formData.aadhaar_front_url) {
+    //             toast.error("Aadhaar front image is required");
+    //             setValidationErrors(prev => ({ ...prev, aadhaar_front_url: "Aadhaar front image is required" }));
+    //             return;
+    //         }
+    //         if (!aadhaarBackFile && !formData.aadhaar_back_url) {
+    //             toast.error("Aadhaar back image is required");
+    //             setValidationErrors(prev => ({ ...prev, aadhaar_back_url: "Aadhaar back image is required" }));
+    //             return;
+    //         }
 
-            // Upload files to Cloudinary first
-            const uploadPromises = [];
-            const updatedData = { ...formData };
+    //         // Upload files to Cloudinary first
+    //         const uploadPromises = [];
+    //         const updatedData = { ...formData };
 
-            if (profilePicFile) {
-                uploadPromises.push(
-                    uploadToCloudinary(profilePicFile).then((result) => {
-                        updatedData.profile_picture_url = result.url;
-                    })
-                );
-            }
+    //         if (profilePicFile) {
+    //             uploadPromises.push(
+    //                 uploadToCloudinary(profilePicFile).then((result) => {
+    //                     updatedData.profile_picture_url = result.url;
+    //                 })
+    //             );
+    //         }
 
-            if (aadhaarFrontFile) {
-                uploadPromises.push(
-                    uploadToCloudinary(aadhaarFrontFile).then((result) => {
-                        updatedData.aadhaar_front_url = result.url;
-                    })
-                );
-            }
+    //         if (aadhaarFrontFile) {
+    //             uploadPromises.push(
+    //                 uploadToCloudinary(aadhaarFrontFile).then((result) => {
+    //                     updatedData.aadhaar_front_url = result.url;
+    //                 })
+    //             );
+    //         }
 
-            if (aadhaarBackFile) {
-                uploadPromises.push(
-                    uploadToCloudinary(aadhaarBackFile).then((result) => {
-                        updatedData.aadhaar_back_url = result.url;
-                    })
-                );
-            }
+    //         if (aadhaarBackFile) {
+    //             uploadPromises.push(
+    //                 uploadToCloudinary(aadhaarBackFile).then((result) => {
+    //                     updatedData.aadhaar_back_url = result.url;
+    //                 })
+    //             );
+    //         }
 
-            // Wait for all uploads to complete
-            await Promise.all(uploadPromises);
+    //         // Wait for all uploads to complete
+    //         await Promise.all(uploadPromises);
 
-            // Now validate the complete data with URLs
-            const validationResult = formSchema.safeParse(updatedData);
+    //         // Now validate the complete data with URLs
+    //         const validationResult = formSchema.safeParse(updatedData);
 
-            if (!validationResult.success) {
-                const errors = {};
-                validationResult.error.errors.forEach((err) => {
-                    const field = err.path[0];
-                    errors[field] = err.message;
-                    toast.error(`${field.replace(/_/g, ' ')}: ${err.message}`);
-                });
-                setValidationErrors(errors);
-                return;
-            }
+    //         if (!validationResult.success) {
+    //             const errors = {};
+    //             validationResult.error.errors.forEach((err) => {
+    //                 const field = err.path[0];
+    //                 errors[field] = err.message;
+    //                 toast.error(`${field.replace(/_/g, ' ')}: ${err.message}`);
+    //             });
+    //             setValidationErrors(errors);
+    //             return;
+    //         }
 
-            // Submit the verification with updated data
-            const result = await submitVerification(
-                {
-                    ...updatedData,
-                    user_id: user.user_id,
-                },
-                dispatch
-            );
+    //         // Submit the verification with updated data
+    //         const result = await submitVerification(
+    //             {
+    //                 ...updatedData,
+    //                 user_id: user.user_id,
+    //             },
+    //             dispatch
+    //         );
 
-            if (result.success) {
-                toast.info("This process usually takes 4 to 5 hours ,If it takes longer than that, please contact support");
-                onClose();
-            } else {
-                toast.error(result.message || "Error updating details, please try again later");
-            }
-        } catch (error) {
-            console.error("Error submitting verification:", error);
-            toast.error(error.message || "Failed to submit verification");
-        } finally {
-            setLoading(false);
+    //         if (result.success) {
+    //             toast.info("This process usually takes 4 to 5 hours ,If it takes longer than that, please contact support");
+    //             onClose();
+    //         } else {
+    //             toast.error(result.message || "Error updating details, please try again later");
+    //         }
+    //     } catch (error) {
+    //         console.error("Error submitting verification:", error);
+    //         toast.error(error.message || "Failed to submit verification");
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
+   const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setFilesUploading(false); // default
+    setValidationErrors({});
+
+    try {
+        // Validate required files
+        const missingFields = [];
+        if (!profilePicFile && !formData.profile_picture_url) {
+            missingFields.push({ field: 'profile_picture_url', message: "Profile picture is required" });
         }
-    };
+        if (!aadhaarFrontFile && !formData.aadhaar_front_url) {
+            missingFields.push({ field: 'aadhaar_front_url', message: "Aadhaar front image is required" });
+        }
+        if (!aadhaarBackFile && !formData.aadhaar_back_url) {
+            missingFields.push({ field: 'aadhaar_back_url', message: "Aadhaar back image is required" });
+        }
+
+        if (missingFields.length > 0) {
+            const errors = {};
+            missingFields.forEach(({ field, message }) => {
+                errors[field] = message;
+                toast.error(message);
+            });
+            setValidationErrors(errors);
+            return;
+        }
+
+        // Begin upload process
+        const uploadPromises = [];
+        const updatedData = { ...formData };
+        let needsUpload = false;
+
+        if (profilePicFile) {
+            needsUpload = true;
+            uploadPromises.push(
+                uploadToCloudinary(profilePicFile).then((res) => {
+                    updatedData.profile_picture_url = res.url;
+                })
+            );
+        }
+
+        if (aadhaarFrontFile) {
+            needsUpload = true;
+            uploadPromises.push(
+                uploadToCloudinary(aadhaarFrontFile).then((res) => {
+                    updatedData.aadhaar_front_url = res.url;
+                })
+            );
+        }
+
+        if (aadhaarBackFile) {
+            needsUpload = true;
+            uploadPromises.push(
+                uploadToCloudinary(aadhaarBackFile).then((res) => {
+                    updatedData.aadhaar_back_url = res.url;
+                })
+            );
+        }
+
+        if (needsUpload) {
+            setFilesUploading(true);
+            await Promise.all(uploadPromises);
+            setFilesUploading(false);
+        }
+
+        // Validate form
+        const validationResult = formSchema.safeParse(updatedData);
+        if (!validationResult.success) {
+            const errors = {};
+            validationResult.error.errors.forEach((err) => {
+                const field = err.path[0];
+                errors[field] = err.message;
+                toast.error(`${field.replace(/_/g, ' ')}: ${err.message}`);
+            });
+            setValidationErrors(errors);
+            return;
+        }
+
+        // Submit final data
+        const result = await submitVerification(
+            {
+                ...updatedData,
+                user_id: user.user_id,
+            },
+            dispatch
+        );
+
+        if (result.success) {
+            toast.info("This process usually takes 4 to 5 hours. If it takes longer, please contact support.");
+            onClose();
+        } else {
+            toast.error(result.message || "Error updating details. Please try again later.");
+        }
+    } catch (error) {
+        console.error("Error submitting verification:", error);
+        toast.error(error.message || "Failed to submit verification.");
+    } finally {
+        setLoading(false);
+        setFilesUploading(false);
+    }
+};
+
+
     return (
         <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50 p-4">
             <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-4xl relative max-h-[90vh] overflow-y-auto">
@@ -422,15 +529,19 @@ const ProfileCard = ({ onClose, user }) => {
                             </div>
 
                             <div className="flex justify-end mt-6">
-                                <button
-                                    type="submit"
-                                    disabled={isLoading}
-                                    className={`px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''
-                                        }`}
-                                >
-                                    {isLoading ? 'Submitting...' : 'Submit for Verification'}
-                                </button>
-                            </div>
+    <div className="flex justify-end mt-6">
+    <button
+        type="submit"
+        disabled={isLoading || filesUploading}
+        className={`px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 
+            ${(isLoading || filesUploading) ? 'opacity-50 cursor-not-allowed' : ''}`}
+    >
+        {(isLoading || filesUploading) ? 'Submitting...' : 'Submit for Verification'}
+    </button>
+</div>
+
+</div>
+
                         </form>
                     </div>
                 ) : (
