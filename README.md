@@ -1,8 +1,9 @@
-# ⚖️ NyaySetu
+# ⚖️ NyaySetu [🔗 Live](https://www.nyaysetuindia.space)
 
 **NyaySetu** is a full-stack justice facilitation platform that bridges the gap between **citizens** and **law enforcement**. Citizens can upload sightings or proof, and police officers working on relevant cases can browse and use them — filtered by crime type, location, and time. It brings accountability, traceability, and collaboration to the justice process.
 
 ---
+
 
 ## 🧠 Why NyaySetu?
 
